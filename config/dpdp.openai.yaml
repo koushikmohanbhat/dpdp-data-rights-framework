@@ -1,0 +1,32 @@
+# OpenAI API direct, with app infrastructure on any cloud.
+tenant: ${TENANT:-acme}
+
+provider:
+  type: openai
+  model: ${OPENAI_MODEL:-gpt-5-mini}
+  embedding_model: text-embedding-3-small
+  store: false        # keep the platform out of the erasure graph; set true only if you need stored responses
+
+pii:
+  detectors: [regex]   # add aws_comprehend or gcp_dlp for names/addresses
+
+vault:
+  key_wrapper: ${DPDP_KEY_WRAPPER:-local}
+  storage: sql
+  local_master_key_path: /run/secrets/dpdp_master.key
+
+lineage:
+  url: ${DPDP_LINEAGE_URL:-sqlite:///.dpdp/lineage.db}
+
+purposes:
+  - {id: support_resolution, description: Resolve support tickets}
+
+connectors:
+  - name: openai_platform        # deletes stored responses / files / vector-store files if created
+    type: openai_platform
+  - name: tickets
+    type: sql_table
+    options: {url: "${APP_DB_URL}", table: tickets, id_column: id, content_column: body, principal_column: principal_id}
+  - name: cache
+    type: redis_cache
+    options: {url: "${REDIS_URL:-redis://localhost:6379/0}"}

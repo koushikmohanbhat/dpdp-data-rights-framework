@@ -1,0 +1,47 @@
+# Google Cloud reference configuration: Vertex AI (Gemini), Agent Engine Memory Bank,
+# Cloud Logging, Vertex Vector Search, BigQuery, Cloud KMS + Firestore vault, Cloud SQL lineage.
+tenant: ${TENANT:-acme-retail}
+
+provider:
+  type: vertex
+  model: ${VERTEX_MODEL:-gemini-2.5-flash}
+  embedding_model: text-embedding-005
+  project: ${GOOGLE_CLOUD_PROJECT}
+  region: ${VERTEX_LOCATION:-asia-south1}
+
+pii:
+  detectors: [regex, gcp_dlp]      # DLP has INDIA_AADHAAR_INDIVIDUAL, INDIA_PAN_INDIVIDUAL, ...
+  project: ${GOOGLE_CLOUD_PROJECT}
+
+vault:
+  key_wrapper: gcp_kms
+  storage: firestore
+  kms_key_id: projects/${GOOGLE_CLOUD_PROJECT}/locations/asia-south1/keyRings/dpdp/cryptoKeys/vault-kek
+  project: ${GOOGLE_CLOUD_PROJECT}
+
+lineage:
+  url: ${DPDP_LINEAGE_URL}   # postgresql+psycopg://... (Cloud SQL / AlloyDB)
+
+purposes:
+  - {id: support_resolution, description: Resolve support tickets}
+  - {id: analytics, description: Service-quality analytics}
+
+connectors:
+  - name: memory_bank
+    type: gcp_vertex_memory_bank
+    options: {reasoning_engine: "projects/${GOOGLE_CLOUD_PROJECT}/locations/asia-south1/reasoningEngines/${AGENT_ENGINE_ID}"}
+  - name: cloud_logging
+    type: gcp_cloud_logging
+    options: {project: "${GOOGLE_CLOUD_PROJECT}", base_filter: 'resource.type="cloud_run_revision"', lookback_days: 30}
+  - name: vector_search
+    type: gcp_vertex_vector_search
+    options: {index: "projects/${GOOGLE_CLOUD_PROJECT}/locations/asia-south1/indexes/${INDEX_ID}"}
+  - name: warehouse
+    type: gcp_bigquery
+    options: {table: "${GOOGLE_CLOUD_PROJECT}.support.tickets", id_column: ticket_id, content_column: body, principal_column: principal_id}
+  - name: eval_set
+    type: jsonl_dataset
+    options: {path: "gs://${EVAL_BUCKET}/golden/support.jsonl"}
+
+policy:
+  aggregate_k_threshold: 10

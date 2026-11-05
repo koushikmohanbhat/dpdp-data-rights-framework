@@ -8,7 +8,7 @@ Precedence:
       aggregate with >= k other principals         -> RETAIN_AGGREGATE
       aggregate below k / per-user summary         -> REGENERATE
       log / trace (immutable stores)               -> CRYPTO_SHRED
-      third-party mention in someone else's record -> REDACT
+      third-party mention in someone else's record (or its derivatives) -> REDACT
  4. default_action (delete)
 """
 from __future__ import annotations
@@ -55,6 +55,8 @@ class PolicyEngine:
         if a.kind == "model" or x.edge_type == "train":
             if a.kind == "model":
                 return Action.FLAG_RETRAIN, "Model weights may memorise training data; retrain without the principal"
+        if x.principal_is_third_party_only and x.edge_type != "aggregate":
+            return Action.REDACT, "Principal is only mentioned in another person's record"
         if x.edge_type == "aggregate" or (a.kind == "summary" and x.principals_behind > 1):
             if x.principals_behind - 1 >= k:
                 return Action.RETAIN_AGGREGATE, f"Aggregate over {x.principals_behind} principals (k={k}); tokens redacted"
@@ -63,6 +65,4 @@ class PolicyEngine:
             return Action.REGENERATE, "Per-user derived summary"
         if a.kind in ("log", "trace"):
             return Action.CRYPTO_SHRED, "Immutable store; content is tokenised"
-        if x.principal_is_third_party_only and x.depth == 0:
-            return Action.REDACT, "Principal is mentioned in another person's record"
         return Action(self.cfg.default_action), "default"

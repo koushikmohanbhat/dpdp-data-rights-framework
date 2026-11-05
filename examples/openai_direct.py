@@ -8,24 +8,24 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
-from dpdp_erasure import ErasureKit, KitConfig  # noqa: E402
+from dpdp_rights import DataRightsFramework, FrameworkConfig  # noqa: E402
 
-cfg = KitConfig.from_dict({
+cfg = FrameworkConfig.from_dict({
     "provider": {"type": "openai", "model": os.environ.get("OPENAI_MODEL", "gpt-5-mini"), "store": False},
-    "purposes": [{"id": "support_resolution"}],
+    "purposes": [{"id": "service_delivery"}],
     "connectors": [{"name": "openai_platform", "type": "openai_platform"}],
     "lineage": {"url": "sqlite:///.dpdp/openai_demo.db"},
 })
-kit = ErasureKit(cfg)
-pid = kit.principal("cust-77")
-kit.grant_consent(pid, "support_resolution")
+dpdp = DataRightsFramework(cfg)
+pid = dpdp.principal("cust-77")
+dpdp.grant_consent(pid, "service_delivery")
 
-with kit.context(pid, purpose="support_resolution"):
+with dpdp.context(pid, purpose="service_delivery"):
     msg = "Hi, I'm Meera Iyer (meera@example.in, +91 98111 22334). My UPI refund to meera@okaxis failed."
-    safe = kit.protect(msg)
+    safe = dpdp.protect(msg)
     print("Sent to OpenAI :", safe.text)
-    ans = kit.generate(safe.text, system="You are a concise support agent.", already_protected=True)
+    ans = dpdp.generate(safe.text, system="You are a concise insurance onboarding agent.", already_protected=True)
     print("Model output   :", ans.text)
     print("Shown to Meera :", ans.reveal())
 
-print(kit.erase(pid)["status"])
+print(dpdp.erase(pid)["status"])

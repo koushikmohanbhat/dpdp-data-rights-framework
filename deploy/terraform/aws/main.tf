@@ -1,4 +1,4 @@
-# AWS infrastructure for the DPDP Erasure Kit:
+# AWS infrastructure for the DPDP Data Rights Framework:
 # KMS key for the vault, DynamoDB vault tables, IAM policy for the orchestrator,
 # CloudWatch Logs data-protection policies (masking as defence in depth),
 # and a daily EventBridge schedule for escrow purges.

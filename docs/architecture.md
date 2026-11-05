@@ -1,6 +1,6 @@
 # Architecture
 
-The kit has a **write path** (instrumentation that runs inside the GenAI app)
+The framework has a **write path** (instrumentation that runs inside the GenAI app)
 and an **erasure path** (the orchestrator that runs when a Data Principal
 asks to be erased or withdraws consent).
 
@@ -9,7 +9,7 @@ asks to be erased or withdraws consent).
 ```mermaid
 flowchart LR
   subgraph APP["GenAI application (any cloud)"]
-    UI["Channel: chat / email / voice"] --> GW["ErasureKit SDK<br/>context envelope"]
+    UI["Channel: chat / email / voice"] --> GW["DataRightsFramework SDK<br/>context envelope"]
     GW --> PII["PII detection<br/>regex (Aadhaar/PAN/UPI) + Comprehend / Guardrails / DLP"]
     PII --> TOK["Tokenizer"]
     TOK --> LLM["Model provider<br/>OpenAI | Anthropic | Bedrock | Vertex"]

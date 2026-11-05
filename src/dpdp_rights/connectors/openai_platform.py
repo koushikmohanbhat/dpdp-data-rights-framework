@@ -2,7 +2,7 @@
 
 Best practice is to keep the provider out of the erasure graph entirely
 (Zero Data Retention where eligible, ``store=False``). When state *is*
-created, the kit registers it as an artifact and this connector deletes it.
+created, the framework registers it as an artifact and this connector deletes it.
 Abuse-monitoring retention on the provider side is governed by the OpenAI
 agreement, not by this API, and is recorded as such in the certificate.
 """

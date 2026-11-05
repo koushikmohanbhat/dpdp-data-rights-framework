@@ -45,7 +45,7 @@ class Tokenizer:
                 other = self.vault.find_principal_by_identifier(e.type, e.text)
                 if other and other != principal_id:
                     owner, third = other, True
-            # Identifiers are only linked to a principal explicitly (kit.register_identifier),
+            # Identifiers are only linked to a principal explicitly (dpdp.register_identifier),
             # never auto-learned, so a third party's email typed by the speaker is not
             # wrongly attributed to the speaker's account later.
             token = self.vault.tokenize(owner, e.type, e.text, third_party=third)

@@ -20,7 +20,7 @@
 
 ## AgentCore conventions
 
-- Use the kit's pseudonymous `principal_id` as the AgentCore Memory **actorId**. The
+- Use the framework's pseudonymous `principal_id` as the AgentCore Memory **actorId**. The
   `integrations.agentcore.AgentCoreMemory` helper does this and tokenises every turn.
 - Namespace templates in config (`/users/{actorId}/facts`) must match your memory strategies.
 - Pass the context envelope into AgentCore Runtime as W3C `baggage`, or in the payload under `dpdp`.
@@ -31,8 +31,8 @@
 ## Writing a connector
 
 ```python
-from dpdp_erasure.connectors import Connector, Discovered, register
-from dpdp_erasure.core.models import Action
+from dpdp_rights.connectors import Connector, Discovered, register
+from dpdp_rights.core.models import Action
 
 @register("servicenow_incident")
 class ServiceNowIncidents(Connector):
@@ -55,5 +55,5 @@ class ServiceNowIncidents(Connector):
         ...
 ```
 
-Import the module before building the kit (or add it to `connectors/__init__.py`), then
+Import the module before building the framework (or add it to `connectors/__init__.py`), then
 reference `type: servicenow_incident` in YAML.

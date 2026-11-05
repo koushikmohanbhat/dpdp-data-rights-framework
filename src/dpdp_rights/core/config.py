@@ -101,7 +101,7 @@ class PurposeConfig(BaseModel):
     legal_hold_basis: str | None = None
 
 
-class KitConfig(BaseModel):
+class FrameworkConfig(BaseModel):
     tenant: str | None = None
     provider: ProviderConfig = Field(default_factory=ProviderConfig)
     pii: PIIConfig = Field(default_factory=PIIConfig)
@@ -113,10 +113,10 @@ class KitConfig(BaseModel):
     enforce_consent: bool = True
 
     @classmethod
-    def load(cls, path: str | Path) -> "KitConfig":
+    def load(cls, path: str | Path) -> "FrameworkConfig":
         raw = yaml.safe_load(Path(path).read_text()) or {}
         return cls.model_validate(_interpolate(raw))
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> "KitConfig":
+    def from_dict(cls, data: dict[str, Any]) -> "FrameworkConfig":
         return cls.model_validate(_interpolate(data))

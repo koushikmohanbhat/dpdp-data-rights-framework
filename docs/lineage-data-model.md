@@ -1,7 +1,7 @@
 # Lineage data model
 
-Consent is usually recorded against a *user*. Personal data, however, moves as
-*elements* (an email, a phone number, a complaint's free text) into many
+Consent is usually recorded against a *customer*. Personal data, however, moves as
+*elements* (an email, a phone number, an Aadhaar number, free text) into many
 *artifacts*. This model tracks all three so an erasure request can be resolved
 to every place the data went.
 
@@ -97,30 +97,39 @@ erDiagram
   }
 ```
 
-## Worked example
+## Worked example (insurance onboarding agent)
 
 ```mermaid
 flowchart TB
-  P(["Priya dp_1a2b"]) --- E1["EMAIL token"] & E2["PHONE token"] & E3["FREE_TEXT"]
+  P(["Priya dp_1a2b"]) --- E1["EMAIL token"] & E2["AADHAAR token"] & E3["FREE_TEXT"]
   R(["Rahul dp_9f8e"]) --- E4["FREE_TEXT"]
-  T1["ticket T-1001<br/>(Priya owns)"]:::own
-  T2["ticket T-1002<br/>(Rahul owns, mentions Priya's EMAIL)"]:::mention
-  E1 & E2 & E3 -.-> T1
-  E4 -.-> T2
-  E1 -.-> T2
-  T1 -->|embed| V1["chunk C-1001"]
-  T1 -->|transform| C1["cache K-1001"]
-  T1 -->|copy| EV["eval row eval-001"]
-  T1 -->|transform| S1["per-user summary"]
-  T1 & T2 -->|aggregate| W["weekly trends summary"]
-  T1 -->|train| M["fine-tuned model ft-7"]
+  A1["application app-1001<br/>(Priya owns)"]:::own
+  A2["application app-1002<br/>(Rahul owns, names Priya as nominee)"]:::mention
+  K["KYC record<br/>(legal hold)"]:::own
+  E1 & E2 & E3 -.-> A1
+  E2 -.-> K
+  E4 -.-> A2
+  E1 -.-> A2
+  A1 -->|embed| V1["document chunk"]
+  A1 -->|transform| C1["agent cache entry"]
+  A1 -->|copy| EV["eval row"]
+  A1 -->|copy| M["marketing audience"]
+  A1 -->|transform| S1["underwriting note"]
+  A1 & A2 -->|aggregate| W["weekly portfolio report"]
+  A1 -->|train| FT["fine-tuned model"]
   classDef own fill:#fde2e2
   classDef mention fill:#fff4cc
 ```
 
-Erasing Priya yields: delete T-1001, C-1001, K-1001, eval-001; **redact** her email token in
-T-1002 (owned by Rahul); regenerate the per-user summary; regenerate or retain the weekly summary
-depending on the k-threshold; flag `ft-7` for retraining; shred her key (escrow for the statutory window).
+When Priya withdraws consent and asks to be erased, the framework deletes her application, document
+chunk, cache entry, eval row and marketing audience entry. It **redacts** her email token in Rahul's
+application, because Rahul owns that record and Priya is only mentioned as his nominee. It regenerates
+her underwriting note, and regenerates or retains the portfolio report depending on the k-threshold.
+It flags the fine-tuned model for retraining and keeps the KYC record sealed under a legal hold. Her
+key is shredded, with an escrow copy kept for the statutory retention window.
+
+If she had withdrawn only `marketing`, only the artifacts processed for that purpose (the audience
+entry) would be erased and her application would continue.
 
 ## Traversal as SQL (PostgreSQL)
 
@@ -151,7 +160,7 @@ ORDER BY depth;
 
 ## DDL (PostgreSQL)
 
-The kit creates these automatically through SQLAlchemy; shown here for review.
+The framework creates these automatically through SQLAlchemy; shown here for review.
 
 ```sql
 CREATE TABLE data_principal (principal_id varchar(64) PRIMARY KEY, status varchar(24) NOT NULL,
@@ -174,7 +183,7 @@ CREATE TABLE artifact_element (artifact_id varchar(64) REFERENCES artifact, elem
 CREATE TABLE lineage_edge (parent_artifact_id varchar(64) REFERENCES artifact, child_artifact_id varchar(64) REFERENCES artifact,
   edge_type varchar(16) NOT NULL, created_at timestamptz NOT NULL, PRIMARY KEY (parent_artifact_id, child_artifact_id));
 CREATE INDEX ON lineage_edge (child_artifact_id);
--- erasure_request, erasure_action, erasure_certificate, retention_escrow: see src/dpdp_erasure/lineage/store.py
+-- erasure_request, erasure_action, erasure_certificate, retention_escrow: see src/dpdp_rights/lineage/store.py
 ```
 
 ## Vault tables (separate trust boundary)

@@ -24,11 +24,11 @@ lineage:
   url: ${DPDP_LINEAGE_URL:-sqlite:///.dpdp/lineage.db}
 
 purposes:
-  - {id: support_resolution, description: Resolve support tickets}
+  - {id: service_delivery, description: Deliver the service the customer signed up for}
 
 connectors:
   - name: anthropic_platform      # deletes Files API uploads registered in lineage
     type: anthropic_platform
-  - name: tickets
+  - name: records
     type: sql_table
-    options: {url: "${APP_DB_URL}", table: tickets, id_column: id, content_column: body, principal_column: principal_id}
+    options: {url: "${APP_DB_URL}", table: records, id_column: id, content_column: body, principal_column: principal_id}

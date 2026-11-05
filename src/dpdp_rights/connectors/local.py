@@ -33,7 +33,7 @@ class SqlTableConnector(Connector):
 
     @property
     def table(self) -> Table:
-        """Reflected lazily so the kit can start before application tables exist."""
+        """Reflected lazily so the framework can start before application tables exist."""
         if self._table is None:
             self._table = Table(self._table_name, MetaData(), autoload_with=self.engine)
         return self._table
@@ -178,7 +178,7 @@ class JsonlDatasetConnector(Connector):
 @register("log_file")
 class LogFileConnector(Connector):
     """Append-only application log files. Treated as immutable: erasure is by
-    crypto-shredding (logs hold tokens only, via the kit's logging filter).
+    crypto-shredding (logs hold tokens only, via the framework's logging filter).
     Verification proves no raw value is present."""
 
     supports = {Action.CRYPTO_SHRED, Action.DELETE}
@@ -206,8 +206,8 @@ class LogFileConnector(Connector):
 
 @register("redis_cache")
 class RedisCacheConnector(Connector):
-    """Semantic / response caches. The kit records cache keys per principal in the
-    set ``<index_prefix><principal_id>`` (see ErasureKit.track_cache_key)."""
+    """Semantic / response caches. The framework records cache keys per principal in the
+    set ``<index_prefix><principal_id>`` (see DataRightsFramework.track_cache_key)."""
 
     supports = {Action.DELETE}
 

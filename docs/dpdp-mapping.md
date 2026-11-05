@@ -1,10 +1,10 @@
-# DPDP Act 2023 / DPDP Rules 2025: how the kit maps
+# DPDP Act 2023 / DPDP Rules 2025: how the framework maps
 
 > **Not legal advice.** This is an engineering mapping that partners should
 > validate with privacy counsel for each deployment. Section and rule
 > references should be checked against the official gazette text.
 
-| Obligation | Where it comes from | What the kit does |
+| Obligation | Where it comes from | What the framework does |
 |---|---|---|
 | Erase on request unless retention is needed for the purpose or by law | Act s.12(3) | `POST /v1/erasure-requests` -> discover, plan, execute, verify, certify |
 | Erase when consent is withdrawn or the purpose is no longer served; make processors erase too | Act s.8(7), s.6(6) | `withdraw_consent(..., erase=True)` runs a purpose-scoped erasure; connectors reach processor-held state (OpenAI, Anthropic, Bedrock, Vertex, SaaS stores) |
@@ -24,7 +24,7 @@ including erasure and retention mechanics, apply from **13 May 2027**.
 
 ## Interpreting "erasure" for derived AI artifacts
 
-The kit takes these positions, all configurable in `policy`:
+The framework takes these positions, all configurable in `policy`:
 
 - **Copies and embeddings** of a principal's text are personal data. They are deleted, because
   embeddings can be partly inverted.

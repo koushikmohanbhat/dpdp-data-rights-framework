@@ -1,97 +1,115 @@
-# GenAI DPDP Erasure Kit
+# DPDP Data Rights Framework for AI Agents
 
-**Lineage-aware right to erasure for LLM and agent systems, built for India's DPDP Act 2023 and DPDP Rules 2025.**
-Works with **OpenAI**, **Anthropic Claude** (API direct, or on Bedrock / Vertex), **Amazon Bedrock / AgentCore** and **Google Vertex AI**.
+**A framework for honouring consent withdrawal and erasure requests in GenAI and agentic applications, built for India's Digital Personal Data Protection (DPDP) Act 2023 and DPDP Rules 2025.**
 
-Once a support message is used to answer a customer, it also lives in prompt logs, traces,
-embeddings, semantic caches, agent memory, eval sets and summaries. Consent is usually stored
-per *user*, but the data spreads per *element*. Deleting the CRM row does not erase the person.
+Works with **OpenAI**, **Anthropic Claude** (API direct, or on Bedrock / Vertex), **Amazon Bedrock / AgentCore** and **Google Vertex AI**, and with any domain: insurance, lending, healthcare, telecom, retail, HR or the public sector.
 
-This kit makes erasure tractable by:
+> Not legal advice. See [docs/dpdp-mapping.md](docs/dpdp-mapping.md) and validate each deployment with privacy counsel.
 
-1. **Tokenising PII before it reaches any model, log or index.** Each person gets their own
-   KMS-wrapped key. One key destruction (crypto-shredding) makes every copy unreadable,
-   including copies in immutable logs and backups.
-2. **Recording lineage at write time.** Every artifact (log stream, vector, cache entry, eval row,
-   AgentCore memory event, summary) is linked to the data elements and parent artifacts it came
-   from, with typed edges: `copy`, `embed`, `transform`, `aggregate`, `train`.
-3. **Tracking consent per element type and purpose**, not just per user.
-4. **Orchestrating erasure:** native discovery, a policy per artifact (delete, redact,
-   regenerate, shred, retain, flag for retraining), verification against raw values, and a
-   hash-chained erasure certificate.
-5. **Handling statutory retention.** Data leaves every operational and AI store immediately. A
-   sealed escrow copy satisfies the one-year minimum in DPDP Rules 8(3) and is destroyed when
-   the window ends.
+## Why this exists
 
-> Not legal advice. See [docs/dpdp-mapping.md](docs/dpdp-mapping.md) and validate with counsel.
+The DPDP Act gives every individual (the *Data Principal*) the right to withdraw consent at any time and to have their personal data erased. The organisation (the *Data Fiduciary*) must then stop processing, erase the data, and make its processors do the same, unless another law requires it to keep the data.
+
+Traditional systems handle this by deleting a row in a system of record. AI agents make that insufficient. Take an applicant who gives an insurance onboarding agent their name, Aadhaar, PAN, health disclosures and a nominee's contact details. Within minutes that data has been:
+
+- sent to a model and written to prompt logs, traces and observability spans
+- chunked and embedded into a vector index for retrieval
+- remembered by the agent (session memory and long-term extracted facts)
+- cached as agent responses
+- summarised into an underwriting note, and rolled up into a weekly portfolio report
+- copied into an evaluation set used to improve the agent
+- placed into a marketing audience for cross-sell
+- kept in a KYC record that sector regulation says must be retained
+
+Consent, meanwhile, was recorded once against the *customer*. Consent applies per purpose, but the data spreads per *data element* (email, phone, Aadhaar, free text) and across derived artifacts. When the applicant later withdraws consent, nobody can say where their data went, which copies must go, which may stay, or prove that it was done.
+
+## What the framework does
+
+| Capability | What it gives you |
+|---|---|
+| **Purpose-based consent ledger** | Consent recorded per Data Principal × data element × purpose, with notice version and Consent Manager reference. Processing for a purpose without valid consent is blocked. |
+| **Tokenisation at the edge** | Personal data is detected (India-aware: Aadhaar with checksum, PAN, UPI, +91 phones, plus Comprehend / Bedrock Guardrails / Cloud DLP) and replaced with tokens *before* it reaches a model, log, index, cache or memory. Each person has their own KMS-wrapped key. |
+| **Data lineage graph** | Every artifact the agent creates is linked to the data elements it contains and the artifacts it was derived from, with typed edges: `copy`, `embed`, `transform`, `aggregate`, `train`. |
+| **Erasure orchestration** | On withdrawal or erasure request: discover copies (including ones nobody registered), decide per artifact (delete, redact, regenerate, crypto-shred, retain under legal hold, flag model for retraining), execute through native connectors. |
+| **Verification and evidence** | Every store is re-checked for tokens and raw values. A hash-chained erasure certificate records every action, exception and legal basis for the DPO or the Data Protection Board. |
+| **Retention-aware** | Legal holds (e.g. KYC record keeping) and the DPDP Rules' one-year minimum retention are handled with sealed keys usable only through privileged access, purged automatically when the period ends. |
+
+Erasure becomes tractable because no store ever holds a raw identifier. Destroying one person's key makes every copy unreadable, including copies in immutable logs and backups. Lineage tells you which derived artifacts (summaries, audiences, eval rows, fine-tuned models) also need action.
+
+## How it maps to DPDP
+
+| DPDP obligation | Framework feature |
+|---|---|
+| Consent must be specific to a purpose; withdrawal as easy as giving it (Act s.6) | Consent ledger per element and purpose; `withdraw_consent()` |
+| On withdrawal, stop processing and make processors stop (s.6(6)) | `protect()` refuses further processing; connectors reach processor-held data (model providers, clouds, SaaS) |
+| Erase when consent is withdrawn or the purpose is served, unless law requires retention (s.8(7)) | Purpose-scoped and full erasure; legal-hold purposes |
+| Right to erasure on request (s.12(3)) | Rights API / CLI → orchestrator → certificate |
+| Reasonable security safeguards (s.8(5), Rule 6) | Tokenisation, per-person KMS keys, tokenised logs |
+| Minimum one-year retention of personal data, traffic data and logs (Rule 8(3)) | Sealed retention escrow with scheduled purge |
+| Grievance redressal within 90 days (Rule 14) | Requests carry an SLA `due_by` and a full audit trail |
+
+Most of these obligations apply from **13 May 2027**. Full mapping: [docs/dpdp-mapping.md](docs/dpdp-mapping.md).
 
 ## Quick start (offline, about 1 minute)
 
 ```bash
 pip install -e ".[dev]"
-python examples/support_copilot/demo.py          # add --leak to watch verification catch a raw-PII log line
+python examples/insurance_onboarding/demo.py      # add --leak to watch verification catch a raw-PII log line
 pytest -q
 ```
 
-To use real models and clouds, install the matching extras:
+The demo runs an insurance onboarding agent for four applicants (term life, motor, health, travel). Then:
 
-```bash
-pip install "genai-dpdp-erasure-kit[openai]"      # OpenAI API
-pip install "genai-dpdp-erasure-kit[anthropic]"   # Claude API direct, or Claude on Bedrock / Vertex
-pip install "genai-dpdp-erasure-kit[aws]"         # Bedrock, AgentCore, CloudWatch, KMS, DynamoDB, S3
-pip install "genai-dpdp-erasure-kit[gcp]"         # Vertex AI, Cloud KMS, Firestore, Logging, BigQuery, DLP
-pip install "genai-dpdp-erasure-kit[all]"         # everything, plus Redis, PostgreSQL and the API server
-```
-
-Until the package is on PyPI, install from a clone with `pip install -e ".[anthropic,aws]"`.
-
-The demo puts four customers through a support copilot (tickets, vectors, cache, eval set, logs,
-per-user and weekly summaries). Priya then asks to be erased:
+1. **Anita withdraws marketing consent only.** Her marketing audience entry is erased; her application continues.
+2. **Priya withdraws all consent and asks to be erased.**
 
 ```
-redact            record       tickets         <- Principal is mentioned in another person's record
-delete            embedding    vectors         <- default
-delete            eval_row     eval_set        <- Eval rows are replaceable; never keep personal data in golden sets
-delete            cache_entry  semantic_cache  <- default          (a rogue copy found by discovery)
-crypto_shred      log          app_log         <- Immutable store; content is tokenised
-regenerate        summary      summaries       <- Aggregate below k=5; rebuild without the principal's inputs
-...
-Rahul's ticket AFTER:  ... her email is [ERASED] ...
+delete            record       applications  <- default
+redact            record       applications  <- Principal is only mentioned in another person's record   (Rahul named her as nominee)
+delete            embedding    vectors       <- default
+delete            eval_row     eval_set      <- Eval rows are replaceable; never keep personal data in golden sets
+delete            cache_entry  agent_cache   <- default          (a copy nobody registered, found by discovery)
+regenerate        summary      summaries     <- Aggregate below k=5; rebuild without the principal's inputs
+retain_legal_hold record       kyc_records   <- Retention required: KYC record keeping (sealed)
+further processing blocked: No consent for purpose 'policy_issuance' ...
+Rahul's application AFTER:  ... Nominee is my wife, email [ERASED] ...
 OK  vault  principal key destroyed; sealed escrow copy kept for statutory retention (365 days)
 ```
 
-## Using it in your app
+## Using it in your agent
+
+Purposes and stores are configuration, so the same code serves an insurance, lending or healthcare agent.
 
 ```python
-from dpdp_erasure import ErasureKit, EdgeType
+from dpdp_rights import DataRightsFramework, EdgeType
 
-kit = ErasureKit.from_yaml("config/dpdp.aws.yaml")     # or dpdp.gcp.yaml / dpdp.openai.yaml / dpdp.anthropic.yaml
+dpdp = DataRightsFramework.from_yaml("config/dpdp.aws.yaml")   # or gcp / openai / anthropic / local
 
-pid = kit.principal("cust-1042")                        # pseudonymous id, e.g. dp_9f3c...
-kit.register_identifier(pid, "EMAIL", "asha@example.in")
-kit.grant_consent(pid, "support_resolution")
+pid = dpdp.principal("applicant-1042")                          # pseudonymous id, e.g. dp_9f3c...
+dpdp.register_identifier(pid, "EMAIL", "asha@example.in")
+dpdp.grant_consent(pid, "policy_issuance", notice_version="2026-11")
 
-logging.getLogger().handlers[0].addFilter(kit.logging_filter())   # logs get tokens, never PII
+logging.getLogger().handlers[0].addFilter(dpdp.logging_filter())   # logs get tokens, never PII
 
-with kit.context(pid, purpose="support_resolution", session_id=sid):
-    safe = kit.protect(user_message)                    # consent check + tokenisation
-    ticket = kit.track_artifact("record", "tickets", {"id": tid}, content=safe.text,
-                                element_ids=safe.element_ids)
-    answer = kit.generate(safe.text, system=SYSTEM, already_protected=True)   # OpenAI / Claude / Bedrock / Vertex
-    kit.track_artifact("cache_entry", "semantic_cache", {"id": key}, parents=[ticket.artifact_id],
-                       content=answer.text)
-    show_to_customer(answer.reveal())                   # detokenised only for the owner
+with dpdp.context(pid, purpose="policy_issuance", session_id=sid):
+    safe = dpdp.protect(user_message)                           # consent check + tokenisation
+    app = dpdp.track_artifact("record", "applications", {"id": app_id},
+                              content=safe.text, element_ids=safe.element_ids)
+    answer = dpdp.generate(safe.text, system=SYSTEM, already_protected=True)   # OpenAI / Claude / Bedrock / Vertex
+    dpdp.track_artifact("summary", "summaries", {"id": note_id}, parents=[app.artifact_id],
+                        edge_type=EdgeType.TRANSFORM, content=answer.text)
+    show_to_applicant(answer.reveal())                          # detokenised only for the owner
 
-kit.erase(pid)                                          # or POST /v1/erasure-requests
-kit.withdraw_consent(pid, "analytics")                  # purpose-scoped erasure
+dpdp.withdraw_consent(pid, "marketing")                         # purpose-scoped erasure
+dpdp.erase(pid)                                                 # full erasure, or POST /v1/erasure-requests
 ```
 
-AgentCore Memory, with the principal id used as `actorId`:
+AgentCore Memory, with the pseudonymous id used as `actorId`:
 
 ```python
-from dpdp_erasure.integrations.agentcore import AgentCoreMemory
-mem = AgentCoreMemory(kit, memory_id=os.environ["AGENTCORE_MEMORY_ID"])
-with kit.context(pid, purpose="support_resolution", session_id=sid):
+from dpdp_rights.integrations.agentcore import AgentCoreMemory
+mem = AgentCoreMemory(dpdp, memory_id=os.environ["AGENTCORE_MEMORY_ID"])
+with dpdp.context(pid, purpose="policy_issuance", session_id=sid):
     mem.add_turn(user_message, role="USER")
 ```
 
@@ -105,17 +123,26 @@ with kit.context(pid, purpose="support_resolution", session_id=sid):
 | `config/dpdp.anthropic.yaml` | Claude via Anthropic SDK: API direct, `AnthropicBedrock` or `AnthropicVertex` (`platform:`) | regex (+ either cloud) | local or KMS | Anthropic Files API uploads, SQL |
 | `config/dpdp.local.yaml` | offline echo model | regex | local | SQLite, JSONL, log files |
 
-Mix and match freely. For example, use OpenAI models with AWS stores by setting
-`provider.type: openai` in the AWS config, or Claude on Bedrock with `provider.type: anthropic`
-and `platform: bedrock`. Claude has no embeddings endpoint, so set `embedding_provider`
-(openai, bedrock or vertex) for vectors.
+Mix and match freely, for example OpenAI models with AWS stores, or Claude on Bedrock with AgentCore Memory. Claude has no embeddings endpoint, so set `embedding_provider` (openai, bedrock or vertex) for vectors.
 
-## Rights API
+Install the extras you need:
 
 ```bash
-dpdp-erasure -c config/dpdp.local.yaml serve --port 8080
-curl -XPOST localhost:8080/v1/erasure-requests -d '{"external_id":"cust-1001","dry_run":true}' -H 'content-type: application/json'
-curl localhost:8080/v1/erasure-requests/<id>
+pip install -e ".[openai]"      # OpenAI API
+pip install -e ".[anthropic]"   # Claude API direct, or Claude on Bedrock / Vertex
+pip install -e ".[aws]"         # Bedrock, AgentCore, CloudWatch, KMS, DynamoDB, S3
+pip install -e ".[gcp]"         # Vertex AI, Cloud KMS, Firestore, Logging, BigQuery, DLP
+pip install -e ".[all]"         # everything, plus Redis, PostgreSQL and the API server
+```
+
+## Rights API and CLI
+
+```bash
+dpdp-rights -c config/dpdp.local.yaml serve --port 8080
+curl -XPOST localhost:8080/v1/consents/withdraw -H 'content-type: application/json' \
+     -d '{"external_id":"app-1003","purpose_id":"marketing"}'
+curl -XPOST localhost:8080/v1/erasure-requests -H 'content-type: application/json' \
+     -d '{"external_id":"app-1001","dry_run":true}'
 curl localhost:8080/v1/erasure-requests/<id>/certificate
 ```
 
@@ -125,7 +152,7 @@ Other CLI commands: `erase`, `lineage`, `certificate`, `connectors`, and `purge-
 ## Repository layout
 
 ```
-src/dpdp_erasure/
+src/dpdp_rights/
   core/          models, context envelope (W3C baggage), config
   pii/           detectors (regex w/ Verhoeff Aadhaar, Comprehend, Guardrails, DLP) + tokenizer
   vault/         per-principal keys (local / AWS KMS / Cloud KMS) + storage (SQL / DynamoDB / Firestore)
@@ -136,10 +163,10 @@ src/dpdp_erasure/
   erasure/       policy engine + orchestrator (+ certificates, escrow purge)
   integrations/  AgentCore Memory/Runtime helpers
   api/ cli.py    FastAPI rights API, CLI
-config/          ready-to-edit configs per cloud
+config/          ready-to-edit configs per cloud / provider
 deploy/terraform AWS + GCP infra for vault, keys, IAM, log protection
 docs/            architecture, lineage data model, DPDP mapping, connectors
-examples/        offline demo, AgentCore agent, OpenAI direct
+examples/        insurance onboarding demo, AgentCore agent, OpenAI direct
 ```
 
 ## Docs

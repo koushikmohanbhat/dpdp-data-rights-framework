@@ -1,6 +1,6 @@
-from dpdp_erasure.core.context import ContextEnvelope
-from dpdp_erasure.pii.detectors import RegexDetector, luhn_valid, verhoeff_check_digit, verhoeff_valid
-from dpdp_erasure.vault.vault import ERASED_MARKER, TOKEN_RE
+from dpdp_rights.core.context import ContextEnvelope
+from dpdp_rights.pii.detectors import RegexDetector, luhn_valid, verhoeff_check_digit, verhoeff_valid
+from dpdp_rights.vault.vault import ERASED_MARKER, TOKEN_RE
 
 
 def aadhaar(prefix="23456789012"):
@@ -27,41 +27,41 @@ def test_regex_rejects_invalid_aadhaar_and_card():
     assert not luhn_valid("4111111111111112")
 
 
-def test_tokens_stable_and_shreddable(kit):
-    pid = kit.principal("c-1")
-    t1 = kit.vault.tokenize(pid, "EMAIL", "A@x.in")
-    t2 = kit.vault.tokenize(pid, "EMAIL", "a@x.in ")
+def test_tokens_stable_and_shreddable(dpdp):
+    pid = dpdp.principal("c-1")
+    t1 = dpdp.vault.tokenize(pid, "EMAIL", "A@x.in")
+    t2 = dpdp.vault.tokenize(pid, "EMAIL", "a@x.in ")
     assert t1 == t2 and TOKEN_RE.fullmatch(t1)
-    assert kit.vault.reveal(f"hi {t1}") == "hi A@x.in" or kit.vault.reveal(f"hi {t1}") == "hi a@x.in "
-    kit.vault.shred(pid)
-    assert kit.vault.reveal(f"hi {t1}") == f"hi {ERASED_MARKER}"
-    assert not kit.vault.has_key(pid)
+    assert dpdp.vault.reveal(f"hi {t1}") == "hi A@x.in" or dpdp.vault.reveal(f"hi {t1}") == "hi a@x.in "
+    dpdp.vault.shred(pid)
+    assert dpdp.vault.reveal(f"hi {t1}") == f"hi {ERASED_MARKER}"
+    assert not dpdp.vault.has_key(pid)
 
 
-def test_same_value_different_principals_unlinkable(kit):
-    a, b = kit.principal("a"), kit.principal("b")
-    assert kit.vault.tokenize(a, "PHONE_IN", "9876543210") != kit.vault.tokenize(b, "PHONE_IN", "9876543210")
+def test_same_value_different_principals_unlinkable(dpdp):
+    a, b = dpdp.principal("a"), dpdp.principal("b")
+    assert dpdp.vault.tokenize(a, "PHONE_IN", "9876543210") != dpdp.vault.tokenize(b, "PHONE_IN", "9876543210")
 
 
-def test_legal_hold_survives_shred(kit):
-    pid = kit.principal("c-2")
-    tok = kit.vault.tokenize(pid, "PAN", "ABCPR1234K")
-    kit.vault.shred(pid, retain_tokens={tok})
-    assert kit.vault.detokenize(tok) is None                       # sealed: not readable by apps
-    assert kit.vault.detokenize(tok, privileged=True) == "ABCPR1234K"
+def test_legal_hold_survives_shred(dpdp):
+    pid = dpdp.principal("c-2")
+    tok = dpdp.vault.tokenize(pid, "PAN", "ABCPR1234K")
+    dpdp.vault.shred(pid, retain_tokens={tok})
+    assert dpdp.vault.detokenize(tok) is None                       # sealed: not readable by apps
+    assert dpdp.vault.detokenize(tok, privileged=True) == "ABCPR1234K"
 
 
-def test_retention_escrow_then_purge(kit):
-    pid = kit.principal("c-3")
-    tok = kit.vault.tokenize(pid, "EMAIL", "e@x.in")
-    out = kit.vault.shred(pid, escrow=True)
+def test_retention_escrow_then_purge(dpdp):
+    pid = dpdp.principal("c-3")
+    tok = dpdp.vault.tokenize(pid, "EMAIL", "e@x.in")
+    out = dpdp.vault.shred(pid, escrow=True)
     assert out["tokens_in_retention_escrow"] == 1
-    assert kit.vault.reveal(tok) == ERASED_MARKER and kit.vault.detokenize(tok, privileged=True) == "e@x.in"
-    kit.vault.destroy(out["escrow_id"])
-    assert kit.vault.detokenize(tok, privileged=True) is None
+    assert dpdp.vault.reveal(tok) == ERASED_MARKER and dpdp.vault.detokenize(tok, privileged=True) == "e@x.in"
+    dpdp.vault.destroy(out["escrow_id"])
+    assert dpdp.vault.detokenize(tok, privileged=True) is None
 
 
 def test_baggage_roundtrip():
-    env = ContextEnvelope("dp_1", "support", "s/1", ("art_a", "art_b"), "acme")
+    env = ContextEnvelope("dp_1", "service", "s/1", ("art_a", "art_b"), "acme")
     back = ContextEnvelope.from_headers(env.to_headers())
     assert back == env

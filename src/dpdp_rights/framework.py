@@ -1,14 +1,15 @@
-"""ErasureKit: the single entry point applications use.
+"""DataRightsFramework: the single entry point applications use.
 
-    kit = ErasureKit.from_yaml("dpdp.yaml")
-    pid = kit.principal("cust-1042")
-    kit.grant_consent(pid, "support_resolution")
-    with kit.context(pid, purpose="support_resolution", session_id="s-1"):
-        safe = kit.protect(ticket_text)              # tokenise + consent check
-        row = save_ticket(safe.text)                 # your code
-        t = kit.track_artifact("record", "tickets", {"id": row}, content=safe.text)
-        ans = kit.generate(safe.text, parents=[t.artifact_id])
-    kit.erase(pid)                                   # discover -> plan -> execute -> verify -> certify
+    dpdp = DataRightsFramework.from_yaml("dpdp.yaml")
+    pid = dpdp.principal("applicant-1042")                       # pseudonymous id
+    dpdp.grant_consent(pid, "policy_issuance", notice_version="2026-11")
+    with dpdp.context(pid, purpose="policy_issuance", session_id="s-1"):
+        safe = dpdp.protect(user_message)                       # consent check + tokenise
+        row = save_application(safe.text)                       # your code
+        a = dpdp.track_artifact("record", "applications", {"id": row}, content=safe.text)
+        ans = dpdp.generate(safe.text, already_protected=True)
+    dpdp.withdraw_consent(pid, "marketing")                     # purpose-scoped erasure
+    dpdp.erase(pid)                                             # discover -> plan -> execute -> verify -> certify
 """
 from __future__ import annotations
 
@@ -20,7 +21,7 @@ from typing import Iterable, Iterator
 from .connectors.base import Connector, build_connectors
 from .consent.ledger import ConsentDenied, ConsentLedger
 from .core import context as ctxmod
-from .core.config import KitConfig
+from .core.config import FrameworkConfig
 from .core.context import ContextEnvelope
 from .core.models import Artifact, DataElement, EdgeType, Purpose, new_id
 from .erasure.orchestrator import Orchestrator
@@ -47,17 +48,17 @@ class GuardedResponse:
     text: str                       # tokenised model output
     artifact_ids: list[str] = field(default_factory=list)  # provider-side state registered for erasure
     element_ids: list[str] = field(default_factory=list)
-    _kit: "ErasureKit | None" = None
+    _dpdp: "DataRightsFramework | None" = None
 
     def reveal(self, for_principal: str | None = None) -> str:
         """Detokenise for display to an authorised viewer (default: the current principal)."""
         env = ctxmod.current()
         allowed = {for_principal or (env.principal_id if env else "")}
-        return self._kit.vault.reveal(self.text, allowed) if self._kit else self.text
+        return self._dpdp.vault.reveal(self.text, allowed) if self._dpdp else self.text
 
 
-class ErasureKit:
-    def __init__(self, config: KitConfig, provider: LLMProvider | None = None,
+class DataRightsFramework:
+    def __init__(self, config: FrameworkConfig, provider: LLMProvider | None = None,
                  connectors: dict[str, Connector] | None = None):
         self.config = config
         self.store = LineageStore(config.lineage.url)
@@ -72,8 +73,8 @@ class ErasureKit:
             self.store.put_purpose(Purpose(p.id, p.description, p.legal_basis, p.retention_days, p.legal_hold_basis))
 
     @classmethod
-    def from_yaml(cls, path: str, **kw) -> "ErasureKit":
-        return cls(KitConfig.load(path), **kw)
+    def from_yaml(cls, path: str, **kw) -> "DataRightsFramework":
+        return cls(FrameworkConfig.load(path), **kw)
 
     # ---- identity & consent -----------------------------------------------
     def principal(self, external_id: str, id_type: str = "EXTERNAL_ID") -> str:
@@ -184,14 +185,14 @@ class ErasureKit:
 
     # ---- logging ----------------------------------------------------------
     def logging_filter(self) -> logging.Filter:
-        kit = self
+        dpdp = self
 
         class TokenizingFilter(logging.Filter):
             def filter(self, record: logging.LogRecord) -> bool:
                 env = ctxmod.current()
                 msg = record.getMessage()
                 if env:
-                    msg = kit.tokenizer.tokenize(msg, env.principal_id).text
+                    msg = dpdp.tokenizer.tokenize(msg, env.principal_id).text
                     record.dpdp_principal = env.principal_id
                     record.dpdp_purpose = env.purpose_id
                 else:

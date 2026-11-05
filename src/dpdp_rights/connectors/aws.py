@@ -32,7 +32,7 @@ class CloudWatchLogsConnector(Connector):
     """Discovers which log streams mention a principal using CloudWatch Logs Insights.
 
     CloudWatch log events cannot be deleted individually, so the default action
-    is CRYPTO_SHRED (logs carry tokens only, thanks to the kit's logging filter
+    is CRYPTO_SHRED (logs carry tokens only, thanks to the framework's logging filter
     and tokenised prompts). If ``delete_streams: true`` and streams are
     dedicated per session/principal, matching streams are deleted.
 
@@ -130,7 +130,7 @@ class CloudWatchLogsConnector(Connector):
 class AgentCoreMemoryConnector(Connector):
     """Amazon Bedrock AgentCore Memory.
 
-    Convention: the agent uses the kit's pseudonymous principal id as the
+    Convention: the agent uses the framework's pseudonymous principal id as the
     AgentCore ``actorId`` (see integrations.agentcore). Then discovery is
     exact: ListSessions(actorId) -> ListEvents, and ListMemoryRecords for each
     namespace template (e.g. "/users/{actorId}/preferences").

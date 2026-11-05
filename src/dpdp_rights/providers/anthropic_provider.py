@@ -6,8 +6,8 @@ One provider, three platforms:
   platform=vertex    -> Claude on Google Vertex AI (AnthropicVertex)
 
 The Messages API keeps no conversation state, so a plain call creates nothing
-the kit needs to erase on the provider side. Files uploaded through the Files
-API do persist until deleted; register them with ``kit.track_artifact(...,
+the framework needs to erase on the provider side. Files uploaded through the Files
+API do persist until deleted; register them with ``dpdp.track_artifact(...,
 store="anthropic_platform", locator={"type": "file", "file_id": ...})``.
 
 Claude has no embeddings endpoint, so ``embed()`` delegates to the embedding

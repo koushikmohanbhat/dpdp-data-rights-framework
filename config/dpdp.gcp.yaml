@@ -23,7 +23,7 @@ lineage:
   url: ${DPDP_LINEAGE_URL}   # postgresql+psycopg://... (Cloud SQL / AlloyDB)
 
 purposes:
-  - {id: support_resolution, description: Resolve support tickets}
+  - {id: service_delivery, description: Deliver the service the customer signed up for}
   - {id: analytics, description: Service-quality analytics}
 
 connectors:
@@ -38,10 +38,10 @@ connectors:
     options: {index: "projects/${GOOGLE_CLOUD_PROJECT}/locations/asia-south1/indexes/${INDEX_ID}"}
   - name: warehouse
     type: gcp_bigquery
-    options: {table: "${GOOGLE_CLOUD_PROJECT}.support.tickets", id_column: ticket_id, content_column: body, principal_column: principal_id}
+    options: {table: "${GOOGLE_CLOUD_PROJECT}.app.records", id_column: record_id, content_column: body, principal_column: principal_id}
   - name: eval_set
     type: jsonl_dataset
-    options: {path: "gs://${EVAL_BUCKET}/golden/support.jsonl"}
+    options: {path: "gs://${EVAL_BUCKET}/golden/agent.jsonl"}
 
 policy:
   aggregate_k_threshold: 10

@@ -111,7 +111,7 @@ class BigQueryConnector(Connector):
 @register("gcp_vertex_vector_search")
 class VertexVectorSearchConnector(Connector):
     """Options: index (projects/../locations/../indexes/ID), project, location.
-    Locator: {"datapoint_ids": [...]}. Register datapoint ids via kit.track_artifact."""
+    Locator: {"datapoint_ids": [...]}. Register datapoint ids via dpdp.track_artifact."""
 
     supports = {Action.DELETE}
 

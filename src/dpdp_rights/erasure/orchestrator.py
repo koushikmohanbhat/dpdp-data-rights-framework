@@ -26,7 +26,7 @@ from ..providers.base import LLMProvider
 from ..vault.vault import Vault
 from .policy import PolicyEngine, PolicyInput
 
-log = logging.getLogger("dpdp_erasure")
+log = logging.getLogger("dpdp_rights")
 
 Regenerator = Callable[[Artifact, ErasureContext, "Orchestrator"], str]
 
@@ -239,10 +239,16 @@ class Orchestrator:
 
     def verify(self, ctx: ErasureContext, full: bool) -> list[dict]:
         out = []
+        kept = {ArtifactStatus.RETAINED.value, ArtifactStatus.PENDING_RETRAIN.value}
         for name, conn in self.connectors.items():
             try:
                 v = conn.verify(ctx)
-                out.append({"store": name, "ok": v.ok, "findings": v.findings[:20], "note": v.note})
+                findings = []
+                for f in v.findings:
+                    a = self.store.find_artifact(name, f["locator"]) if isinstance(f.get("locator"), dict) else None
+                    if a is None or a.status not in kept:      # sealed legal-hold / retained items are expected
+                        findings.append(f)
+                out.append({"store": name, "ok": not findings, "findings": findings[:20], "note": v.note})
             except Exception as e:  # noqa: BLE001
                 out.append({"store": name, "ok": False, "findings": [], "note": f"verify error: {e}"})
         if full:

@@ -27,7 +27,7 @@ lineage:
   url: ${DPDP_LINEAGE_URL}   # e.g. postgresql+psycopg://user:pass@aurora-endpoint:5432/dpdp
 
 purposes:
-  - {id: support_resolution, description: Resolve support tickets}
+  - {id: service_delivery, description: Deliver the service the customer signed up for}
   - {id: analytics, description: Service-quality analytics}
   - {id: model_evaluation, description: Assistant evaluation}
   - id: kyc_regulatory
@@ -52,7 +52,7 @@ connectors:
         - aws/spans                                          # AgentCore Observability (Transaction Search)
         - /aws/bedrock-agentcore/runtimes/${AGENT_RUNTIME_ID}-DEFAULT
         - ${BEDROCK_INVOCATION_LOG_GROUP:-/aws/bedrock/modelinvocations}
-        - /ecs/support-copilot
+        - /ecs/${APP_NAME:-ai-agent}
 
   - name: kb
     type: aws_bedrock_kb
@@ -64,15 +64,15 @@ connectors:
 
   - name: eval_set
     type: jsonl_dataset
-    options: {path: "s3://${EVAL_BUCKET}/golden/support.jsonl", id_field: id}
+    options: {path: "s3://${EVAL_BUCKET}/golden/agent.jsonl", id_field: id}
 
   - name: chat_history
     type: aws_dynamodb
     options: {table: chat_history, partition_key: principal_id, sort_key: ts, region: "${AWS_REGION:-ap-south-1}"}
 
-  - name: tickets
+  - name: records
     type: sql_table
-    options: {url: "${APP_DB_URL}", table: tickets, id_column: id, content_column: body, principal_column: principal_id}
+    options: {url: "${APP_DB_URL}", table: records, id_column: id, content_column: body, principal_column: principal_id}
 
   - name: vectors
     type: sql_table      # pgvector table on Aurora PostgreSQL

@@ -3,11 +3,11 @@ import boto3
 import pytest
 from botocore.stub import ANY, Stubber
 
-from dpdp_erasure.connectors.aws import AgentCoreMemoryConnector, CloudWatchLogsConnector
-from dpdp_erasure.connectors.base import ErasureContext
-from dpdp_erasure.core.models import Action, Artifact
+from dpdp_rights.connectors.aws import AgentCoreMemoryConnector, CloudWatchLogsConnector
+from dpdp_rights.connectors.base import ErasureContext
+from dpdp_rights.core.models import Action, Artifact
 
-MEM = "support_mem-abcdefghij"
+MEM = "agent_mem-abcdefghij"
 
 
 @pytest.fixture

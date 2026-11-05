@@ -20,19 +20,19 @@ from ..core.models import EdgeType
 
 
 class AgentCoreMemory:
-    def __init__(self, kit, memory_id: str, connector_name: str = "agentcore_memory",
+    def __init__(self, dpdp, memory_id: str, connector_name: str = "agentcore_memory",
                  region: str | None = None, client=None):
         if client is None:
             import boto3
 
             client = boto3.client("bedrock-agentcore", region_name=region)
-        self.kit, self.client, self.memory_id, self.store = kit, client, memory_id, connector_name
+        self.dpdp, self.client, self.memory_id, self.store = dpdp, client, memory_id, connector_name
 
     def add_turn(self, text: str, role: str = "USER", session_id: str | None = None,
                  parents: list[str] | None = None) -> dict[str, Any]:
         env = ctxmod.require()
-        safe = self.kit.protect(text) if role == "USER" else None
-        payload_text = safe.text if safe else self.kit.tokenizer.tokenize(text, env.principal_id).text
+        safe = self.dpdp.protect(text) if role == "USER" else None
+        payload_text = safe.text if safe else self.dpdp.tokenizer.tokenize(text, env.principal_id).text
         sid = session_id or env.session_id or "default"
         r = self.client.create_event(
             memoryId=self.memory_id, actorId=env.principal_id, sessionId=sid,
@@ -41,7 +41,7 @@ class AgentCoreMemory:
             metadata={"dpdp_purpose": {"stringValue": env.purpose_id}},
         )
         ev = r["event"]
-        art = self.kit.track_artifact(
+        art = self.dpdp.track_artifact(
             "memory_event", self.store,
             {"memoryId": self.memory_id, "actorId": env.principal_id, "sessionId": sid, "eventId": ev["eventId"]},
             content=payload_text, element_ids=safe.element_ids if safe else (),

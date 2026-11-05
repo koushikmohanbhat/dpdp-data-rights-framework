@@ -2,7 +2,7 @@
 Mistral, OpenAI open-weight models, etc. hosted on Bedrock).
 
 Note: if Bedrock *model invocation logging* is enabled, prompts land in
-CloudWatch Logs and/or S3. Because the kit tokenises before calling, those
+CloudWatch Logs and/or S3. Because the framework tokenises before calling, those
 logs hold tokens only; register the log group with the ``aws_cloudwatch_logs``
 connector so they are covered by discovery and verification.
 """

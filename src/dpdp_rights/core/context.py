@@ -79,7 +79,7 @@ def require() -> ContextEnvelope:
     env = _current.get()
     if env is None:
         raise RuntimeError(
-            "No DPDP context envelope active. Wrap processing in `with kit.context(...)`."
+            "No DPDP context envelope active. Wrap processing in `with dpdp.context(...)`."
         )
     return env
 

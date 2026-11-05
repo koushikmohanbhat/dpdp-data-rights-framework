@@ -4,10 +4,10 @@ from types import SimpleNamespace
 import boto3
 from botocore.stub import ANY, Stubber
 
-from dpdp_erasure import ErasureKit
-from dpdp_erasure.connectors.openai_platform import OpenAIPlatformConnector
-from dpdp_erasure.providers.bedrock_provider import BedrockProvider
-from dpdp_erasure.providers.openai_provider import OpenAIProvider
+from dpdp_rights import DataRightsFramework
+from dpdp_rights.connectors.openai_platform import OpenAIPlatformConnector
+from dpdp_rights.providers.bedrock_provider import BedrockProvider
+from dpdp_rights.providers.openai_provider import OpenAIProvider
 
 
 class FakeResponses:
@@ -22,20 +22,20 @@ class FakeResponses:
         self.deleted.append(rid)
 
 
-def test_openai_provider_sees_tokens_and_stored_response_is_erased(kit):
+def test_openai_provider_sees_tokens_and_stored_response_is_erased(dpdp):
     fake = SimpleNamespace(responses=FakeResponses(), files=None)
-    kit.provider = OpenAIProvider("gpt-test", store=True, client=fake)
-    kit.connectors["openai_platform"] = OpenAIPlatformConnector("openai_platform", client=fake)
-    kit.orchestrator.connectors = kit.connectors
-    pid = kit.principal("o-1")
-    kit.grant_consent(pid, "support")
-    with kit.context(pid, purpose="support"):
-        ans = kit.generate("please refund o1@x.in")
+    dpdp.provider = OpenAIProvider("gpt-test", store=True, client=fake)
+    dpdp.connectors["openai_platform"] = OpenAIPlatformConnector("openai_platform", client=fake)
+    dpdp.orchestrator.connectors = dpdp.connectors
+    pid = dpdp.principal("o-1")
+    dpdp.grant_consent(pid, "service")
+    with dpdp.context(pid, purpose="service"):
+        ans = dpdp.generate("please refund o1@x.in")
     sent = fake.responses.sent[0]
     assert "o1@x.in" not in sent["input"] and "<EMAIL_" in sent["input"] and sent["store"] is True
-    with kit.context(pid, purpose="support"):
+    with dpdp.context(pid, purpose="service"):
         assert ans.reveal().endswith("o1@x.in")
-    res = kit.erase(pid)
+    res = dpdp.erase(pid)
     assert fake.responses.deleted == ["resp_123"] and res["status"] == "completed"
 
 
@@ -50,4 +50,4 @@ def test_bedrock_converse_with_tokens(workdir):
     with st:
         r = BedrockProvider("m", client=client).generate("<EMAIL_aaaaaaaaaaaa> wants a refund", system="sys")
     assert r.text == "ok" and r.provider_ref is None
-    assert isinstance(ErasureKit, type)
+    assert isinstance(DataRightsFramework, type)

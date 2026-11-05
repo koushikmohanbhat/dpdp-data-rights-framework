@@ -7,7 +7,7 @@
 | Obligation | Where it comes from | What the kit does |
 |---|---|---|
 | Erase on request unless retention is needed for the purpose or by law | Act s.12(3) | `POST /v1/erasure-requests` -> discover, plan, execute, verify, certify |
-| Erase when consent is withdrawn or the purpose is no longer served; make processors erase too | Act s.8(7), s.6(6) | `withdraw_consent(..., erase=True)` runs a purpose-scoped erasure; connectors reach processor-held state (OpenAI, Bedrock, Vertex, SaaS stores) |
+| Erase when consent is withdrawn or the purpose is no longer served; make processors erase too | Act s.8(7), s.6(6) | `withdraw_consent(..., erase=True)` runs a purpose-scoped erasure; connectors reach processor-held state (OpenAI, Anthropic, Bedrock, Vertex, SaaS stores) |
 | Consent specific to purpose; withdrawal as easy as giving it | Act s.6 | Consent ledger per principal x element type x purpose; `protect()` blocks processing without consent |
 | Legitimate uses without consent | Act s.7 | `legal_basis: legitimate_use` purposes skip the consent check |
 | Reasonable security safeguards (encryption, masking, tokenisation, access control, logs) | Act s.8(5); Rules r.6 | KMS-wrapped per-principal keys, tokenised logs/prompts/vectors, privileged-only reads of sealed data |

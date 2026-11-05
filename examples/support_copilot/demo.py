@@ -7,6 +7,7 @@ Runs fully offline (echo model, local vault, SQLite):
     python examples/support_copilot/demo.py            # clean run
     python examples/support_copilot/demo.py --leak     # simulate raw PII leaking into a log
     DPDP_PROVIDER=openai DPDP_MODEL=gpt-5-mini python examples/support_copilot/demo.py
+    DPDP_PROVIDER=anthropic DPDP_MODEL=claude-sonnet-5-5 python examples/support_copilot/demo.py
 """
 from __future__ import annotations
 

@@ -33,6 +33,18 @@ python examples/support_copilot/demo.py          # add --leak to watch verificat
 pytest -q
 ```
 
+To use real models and clouds, install the matching extras:
+
+```bash
+pip install "genai-dpdp-erasure-kit[openai]"      # OpenAI API
+pip install "genai-dpdp-erasure-kit[anthropic]"   # Claude API direct, or Claude on Bedrock / Vertex
+pip install "genai-dpdp-erasure-kit[aws]"         # Bedrock, AgentCore, CloudWatch, KMS, DynamoDB, S3
+pip install "genai-dpdp-erasure-kit[gcp]"         # Vertex AI, Cloud KMS, Firestore, Logging, BigQuery, DLP
+pip install "genai-dpdp-erasure-kit[all]"         # everything, plus Redis, PostgreSQL and the API server
+```
+
+Until the package is on PyPI, install from a clone with `pip install -e ".[anthropic,aws]"`.
+
 The demo puts four customers through a support copilot (tickets, vectors, cache, eval set, logs,
 per-user and weekly summaries). Priya then asks to be erased:
 

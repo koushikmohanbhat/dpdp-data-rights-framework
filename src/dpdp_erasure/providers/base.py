@@ -1,4 +1,5 @@
-"""Model provider abstraction: OpenAI (direct), Amazon Bedrock, Google Vertex AI.
+"""Model provider abstraction: OpenAI (direct), Anthropic Claude (direct / Bedrock / Vertex),
+Amazon Bedrock Converse, Google Vertex AI.
 
 Providers only ever receive tokenised text. Each returns an optional
 ``provider_ref`` describing state the provider persisted (e.g. an OpenAI

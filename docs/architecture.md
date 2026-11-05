@@ -12,7 +12,7 @@ flowchart LR
     UI["Channel: chat / email / voice"] --> GW["ErasureKit SDK<br/>context envelope"]
     GW --> PII["PII detection<br/>regex (Aadhaar/PAN/UPI) + Comprehend / Guardrails / DLP"]
     PII --> TOK["Tokenizer"]
-    TOK --> LLM["Model provider<br/>OpenAI | Bedrock | Vertex"]
+    TOK --> LLM["Model provider<br/>OpenAI | Anthropic | Bedrock | Vertex"]
     GW --> LOGF["Tokenising log filter"]
   end
 
@@ -110,15 +110,15 @@ Erasure gets cheap when no store ever holds a raw identifier:
 
 ## Native service mapping
 
-| Concern | AWS | Google Cloud | OpenAI direct |
-|---|---|---|---|
-| Model calls | Bedrock Converse (+ Guardrails) | Vertex AI (google-genai) | Responses API, `store=false` |
-| PII detection | Comprehend, Bedrock Guardrails | Sensitive Data Protection (DLP) | regex + either cloud |
-| Vault keys | KMS (encryption context = principal) | Cloud KMS (AAD = principal) | local / either KMS |
-| Vault storage | DynamoDB | Firestore | SQL |
-| Lineage DB | Aurora / RDS PostgreSQL | Cloud SQL / AlloyDB | any SQLAlchemy DB |
-| Agent memory | AgentCore Memory (events + records) | Agent Engine Memory Bank | - |
-| Observability | CloudWatch Logs, AgentCore spans (`aws/spans`), Bedrock invocation logs | Cloud Logging | - |
-| Retrieval | Bedrock Knowledge Bases, pgvector | Vertex Vector Search | vector stores |
-| Datasets | S3 (all versions purged) | GCS | Files API |
-| Scheduling | EventBridge Scheduler -> Lambda/ECS | Cloud Scheduler -> Cloud Run job | cron |
+| Concern | AWS | Google Cloud | OpenAI direct | Anthropic direct |
+|---|---|---|---|---|
+| Model calls | Bedrock Converse (+ Guardrails) | Vertex AI (google-genai) | Responses API, `store=false` | Messages API (stateless); Claude also on Bedrock/Vertex via `platform` |
+| PII detection | Comprehend, Bedrock Guardrails | Sensitive Data Protection (DLP) | regex + either cloud | regex + either cloud |
+| Vault keys | KMS (encryption context = principal) | Cloud KMS (AAD = principal) | local / either KMS | local / either KMS |
+| Vault storage | DynamoDB | Firestore | SQL | SQL |
+| Lineage DB | Aurora / RDS PostgreSQL | Cloud SQL / AlloyDB | any SQLAlchemy DB | any SQLAlchemy DB |
+| Agent memory | AgentCore Memory (events + records) | Agent Engine Memory Bank | - | - |
+| Observability | CloudWatch Logs, AgentCore spans (`aws/spans`), Bedrock invocation logs | Cloud Logging | - | - |
+| Retrieval | Bedrock Knowledge Bases, pgvector | Vertex Vector Search | vector stores | bring your own (Claude has no embeddings API) |
+| Datasets | S3 (all versions purged) | GCS | Files API | Files API (deleted by connector) |
+| Scheduling | EventBridge Scheduler -> Lambda/ECS | Cloud Scheduler -> Cloud Run job | cron | cron |

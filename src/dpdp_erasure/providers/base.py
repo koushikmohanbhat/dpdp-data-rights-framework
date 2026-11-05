@@ -56,6 +56,16 @@ class EchoProvider:
 def build_provider(cfg) -> LLMProvider:
     if cfg.type == "echo":
         return EchoProvider(cfg.model)
+    if cfg.type == "anthropic":
+        from .anthropic_provider import AnthropicProvider
+
+        embedder = None
+        if cfg.embedding_provider:
+            embedder = build_provider(cfg.model_copy(update={"type": cfg.embedding_provider,
+                                                             "model": cfg.embedding_model or "echo"}))
+        opts = dict(cfg.options)
+        return AnthropicProvider(cfg.model, platform=cfg.platform, region=cfg.region, project=cfg.project,
+                                 embedder=embedder, **opts)
     if cfg.type == "openai":
         from .openai_provider import OpenAIProvider
 

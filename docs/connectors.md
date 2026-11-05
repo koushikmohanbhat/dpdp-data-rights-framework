@@ -16,6 +16,7 @@
 | `gcp_vertex_vector_search` | Vertex AI Vector Search | via lineage | remove_datapoints | - |
 | `gcp_vertex_memory_bank` | Agent Engine Memory Bank (v1beta1) | memories:retrieve by scope | delete memory | re-discovery empty |
 | `openai_platform` | Stored responses, conversations, files, vector-store files | via lineage | delete | API confirmation |
+| `anthropic_platform` | Anthropic Files API uploads (Messages API is stateless) | via lineage | delete | API confirmation |
 
 ## AgentCore conventions
 

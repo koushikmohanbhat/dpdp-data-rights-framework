@@ -1,7 +1,7 @@
 # GenAI DPDP Erasure Kit
 
 **Lineage-aware right to erasure for LLM and agent systems, built for India's DPDP Act 2023 and DPDP Rules 2025.**
-Works with **OpenAI (direct)**, **Amazon Bedrock / AgentCore** and **Google Vertex AI**.
+Works with **OpenAI**, **Anthropic Claude** (API direct, or on Bedrock / Vertex), **Amazon Bedrock / AgentCore** and **Google Vertex AI**.
 
 Once a support message is used to answer a customer, it also lives in prompt logs, traces,
 embeddings, semantic caches, agent memory, eval sets and summaries. Consent is usually stored
@@ -53,7 +53,7 @@ OK  vault  principal key destroyed; sealed escrow copy kept for statutory retent
 ```python
 from dpdp_erasure import ErasureKit, EdgeType
 
-kit = ErasureKit.from_yaml("config/dpdp.aws.yaml")     # or dpdp.gcp.yaml / dpdp.openai.yaml
+kit = ErasureKit.from_yaml("config/dpdp.aws.yaml")     # or dpdp.gcp.yaml / dpdp.openai.yaml / dpdp.anthropic.yaml
 
 pid = kit.principal("cust-1042")                        # pseudonymous id, e.g. dp_9f3c...
 kit.register_identifier(pid, "EMAIL", "asha@example.in")
@@ -65,7 +65,7 @@ with kit.context(pid, purpose="support_resolution", session_id=sid):
     safe = kit.protect(user_message)                    # consent check + tokenisation
     ticket = kit.track_artifact("record", "tickets", {"id": tid}, content=safe.text,
                                 element_ids=safe.element_ids)
-    answer = kit.generate(safe.text, system=SYSTEM, already_protected=True)   # OpenAI / Bedrock / Vertex
+    answer = kit.generate(safe.text, system=SYSTEM, already_protected=True)   # OpenAI / Claude / Bedrock / Vertex
     kit.track_artifact("cache_entry", "semantic_cache", {"id": key}, parents=[ticket.artifact_id],
                        content=answer.text)
     show_to_customer(answer.reveal())                   # detokenised only for the owner
@@ -90,10 +90,13 @@ with kit.context(pid, purpose="support_resolution", session_id=sid):
 | `config/dpdp.aws.yaml` | Bedrock Converse (+ Guardrails) | regex + Comprehend / Guardrails | KMS + DynamoDB | AgentCore Memory, CloudWatch (incl. `aws/spans`, Bedrock invocation logs), Bedrock KB, S3, DynamoDB, Aurora pgvector |
 | `config/dpdp.gcp.yaml` | Vertex AI Gemini | regex + Cloud DLP | Cloud KMS + Firestore | Memory Bank, Cloud Logging, Vector Search, BigQuery, GCS |
 | `config/dpdp.openai.yaml` | OpenAI Responses API (`store=false`) | regex (+ either cloud) | local or KMS | OpenAI stored responses/files, Redis, SQL |
+| `config/dpdp.anthropic.yaml` | Claude via Anthropic SDK: API direct, `AnthropicBedrock` or `AnthropicVertex` (`platform:`) | regex (+ either cloud) | local or KMS | Anthropic Files API uploads, SQL |
 | `config/dpdp.local.yaml` | offline echo model | regex | local | SQLite, JSONL, log files |
 
 Mix and match freely. For example, use OpenAI models with AWS stores by setting
-`provider.type: openai` in the AWS config.
+`provider.type: openai` in the AWS config, or Claude on Bedrock with `provider.type: anthropic`
+and `platform: bedrock`. Claude has no embeddings endpoint, so set `embedding_provider`
+(openai, bedrock or vertex) for vectors.
 
 ## Rights API
 
@@ -116,8 +119,8 @@ src/dpdp_erasure/
   vault/         per-principal keys (local / AWS KMS / Cloud KMS) + storage (SQL / DynamoDB / Firestore)
   consent/       consent ledger (principal x element x purpose)
   lineage/       control-plane store + graph traversal
-  providers/     OpenAI, Bedrock, Vertex, echo
-  connectors/    local, AWS, GCP, OpenAI platform
+  providers/     OpenAI, Anthropic (direct/Bedrock/Vertex), Bedrock Converse, Vertex, echo
+  connectors/    local, AWS, GCP, OpenAI platform, Anthropic platform
   erasure/       policy engine + orchestrator (+ certificates, escrow purge)
   integrations/  AgentCore Memory/Runtime helpers
   api/ cli.py    FastAPI rights API, CLI

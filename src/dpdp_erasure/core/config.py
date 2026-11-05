@@ -23,9 +23,11 @@ def _interpolate(value: Any) -> Any:
 
 
 class ProviderConfig(BaseModel):
-    type: Literal["openai", "bedrock", "vertex", "echo"] = "echo"
+    type: Literal["openai", "anthropic", "bedrock", "vertex", "echo"] = "echo"
     model: str = "echo"
+    platform: Literal["anthropic", "bedrock", "vertex"] = "anthropic"   # anthropic provider only
     embedding_model: str | None = None
+    embedding_provider: Literal["openai", "bedrock", "vertex", "echo"] | None = None  # needed for anthropic
     region: str | None = None          # bedrock / vertex location
     project: str | None = None         # vertex
     store: bool = False                # openai: never persist responses by default

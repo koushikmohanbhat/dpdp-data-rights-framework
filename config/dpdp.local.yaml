@@ -3,7 +3,7 @@
 tenant: demo
 
 provider:
-  type: ${DPDP_PROVIDER:-echo}     # echo | openai | bedrock | vertex
+  type: ${DPDP_PROVIDER:-echo}     # echo | openai | anthropic | bedrock | vertex
   model: ${DPDP_MODEL:-echo}
 
 pii:

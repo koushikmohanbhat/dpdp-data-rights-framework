@@ -1,0 +1,34 @@
+# Anthropic Claude: API direct, or Claude on Bedrock / Vertex via the same SDK.
+tenant: ${TENANT:-acme}
+
+provider:
+  type: anthropic
+  platform: ${ANTHROPIC_PLATFORM:-anthropic}   # anthropic | bedrock | vertex
+  model: ${CLAUDE_MODEL:-claude-sonnet-5-5}     # on Bedrock/Vertex use that platform's Claude model ID
+  region: ${CLAUDE_REGION:-}                    # bedrock: e.g. ap-south-1; vertex: e.g. asia-south1
+  project: ${GOOGLE_CLOUD_PROJECT:-}            # vertex only
+  # Claude has no embeddings endpoint: pick one for vectors
+  embedding_provider: ${EMBEDDING_PROVIDER:-openai}   # openai | bedrock | vertex
+  embedding_model: ${EMBEDDING_MODEL:-text-embedding-3-small}
+  options:
+    max_tokens: 1024
+
+pii:
+  detectors: [regex]   # add aws_comprehend / bedrock_guardrail / gcp_dlp for names and addresses
+
+vault:
+  key_wrapper: ${DPDP_KEY_WRAPPER:-local}
+  storage: sql
+
+lineage:
+  url: ${DPDP_LINEAGE_URL:-sqlite:///.dpdp/lineage.db}
+
+purposes:
+  - {id: support_resolution, description: Resolve support tickets}
+
+connectors:
+  - name: anthropic_platform      # deletes Files API uploads registered in lineage
+    type: anthropic_platform
+  - name: tickets
+    type: sql_table
+    options: {url: "${APP_DB_URL}", table: tickets, id_column: id, content_column: body, principal_column: principal_id}

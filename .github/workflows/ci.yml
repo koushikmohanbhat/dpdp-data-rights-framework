@@ -12,4 +12,4 @@ jobs:
       - run: pip install -e ".[dev]"
       - run: ruff check src tests
       - run: pytest -q
-      - run: cd /tmp && python $GITHUB_WORKSPACE/examples/support_copilot/demo.py
+      - run: cd /tmp && python $GITHUB_WORKSPACE/examples/insurance_onboarding/demo.py

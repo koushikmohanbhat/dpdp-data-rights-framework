@@ -18,9 +18,11 @@ class BedrockProvider:
 
     def __init__(self, model: str, embedding_model: str | None = None, region: str | None = None,
                  guardrail_id: str | None = None, guardrail_version: str = "DRAFT", client=None, **_):
-        import boto3
+        if client is None:
+            import boto3
 
-        self.client = client or boto3.client("bedrock-runtime", region_name=region)
+            client = boto3.client("bedrock-runtime", region_name=region)
+        self.client = client
         self.model = model
         self.embedding_model = embedding_model or "amazon.titan-embed-text-v2:0"
         self.guardrail = ({"guardrailIdentifier": guardrail_id, "guardrailVersion": guardrail_version}

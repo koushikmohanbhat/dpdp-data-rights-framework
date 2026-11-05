@@ -14,9 +14,11 @@ class OpenAIProvider:
 
     def __init__(self, model: str, embedding_model: str | None = None, store: bool = False,
                  client=None, **client_kwargs):
-        from openai import OpenAI
+        if client is None:
+            from openai import OpenAI
 
-        self.client = client or OpenAI(**client_kwargs)
+            client = OpenAI(**client_kwargs)
+        self.client = client
         self.model = model
         self.embedding_model = embedding_model or "text-embedding-3-small"
         self.store = store

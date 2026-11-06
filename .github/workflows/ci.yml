@@ -53,7 +53,7 @@ jobs:
       matrix: { stack: ["deploy/terraform/aws", "deploy/terraform/aws-integration", "deploy/terraform/gcp"] }
     steps:
       - uses: actions/checkout@v4
-      - uses: hashicorp/setup-terraform@v3
+      - uses: hashicorp/setup-terraform@v4
       - name: fmt (advisory)
         run: terraform -chdir=${{ matrix.stack }} fmt -check -diff || echo "::warning::run terraform fmt"
       - run: terraform -chdir=${{ matrix.stack }} init -backend=false -input=false

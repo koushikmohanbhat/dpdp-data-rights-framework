@@ -42,7 +42,7 @@ jobs:
         run: |
           test -n "${{ vars.AWS_ROLE_ARN }}" || { echo "::error::Set AWS_ROLE_ARN in the aws-integration environment"; exit 1; }
           test -n "${{ vars.AWS_REGION }}" || { echo "::error::Set AWS_REGION in the aws-integration environment"; exit 1; }
-      - uses: aws-actions/configure-aws-credentials@v4
+      - uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ vars.AWS_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}

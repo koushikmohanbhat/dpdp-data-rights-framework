@@ -1,0 +1,97 @@
+# Legal rules for Data Principal rights requests under India's DPDP Act 2023 and DPDP Rules 2025.
+#
+# An engineering reading of the official text, NOT legal advice. Have counsel review it, record the
+# review in `reviewed`, and keep your own copy (rights.rule_sets_dir) if you change anything.
+# Every case records the rule-set id, version and a SHA-256 of the effective rules (after your
+# overrides), so later changes never rewrite how an earlier case was judged.
+#
+# respond_within_days: the deadline the framework sets on a new case (calendar days).
+# max_days: an upper limit. `prescribed: true` means the limit is in the law and overrides above it
+#           are refused; `prescribed: false` means it is this framework's conservative default and
+#           overrides above it produce a check-config warning.
+id: dpdp-in
+version: "2025.11-1"
+title: India, Digital Personal Data Protection Act 2023 and DPDP Rules 2025
+effective_from: 2025-11-13
+commencement: 2027-05-13          # rights provisions (Act ss.11-14, Rules r.14) apply from this date
+sources:
+  - "DPDP Act 2023 (No. 22 of 2023), Chapter III"
+  - "DPDP Rules 2025, G.S.R. 846(E), 13 November 2025, rule 14"
+reviewed: null                    # e.g. "Counsel X, 2027-03-01, memo LGL-221"
+
+publication:                      # Rules r.14(1)
+  basis: "Rules r.14(1)"
+  text: >-
+    Publish prominently on the website, the app, or both, how a Data Principal makes a request to exercise
+    these rights, and any identifier (customer number, username, policy number) needed to identify them.
+
+requests:
+  access:
+    basis: "Act s.11; Rules r.14(1)"
+    summary: A summary of the personal data processed and the processing activities, the other Data Fiduciaries and Data Processors it was shared with and what was shared.
+    respond_within_days: 30
+    max_days: 90
+    prescribed: false
+    requesters: [principal, nominee]
+    review_by_default: true
+    notes: >-
+      s.11(1) applies to data processed on the basis of consent or a voluntary provision under s.7(a).
+      s.11(2): sharing with Data Fiduciaries authorised by law for preventing, detecting or investigating
+      offences need not be disclosed (mark such recipients exempt_from_access).
+  correction:
+    basis: "Act s.12(1)-(2)"
+    summary: Correct inaccurate or misleading personal data, complete incomplete data, update data.
+    respond_within_days: 30
+    max_days: 90
+    prescribed: false
+    requesters: [principal, nominee]
+    review_by_default: true
+    notes: The Data Fiduciary decides whether the correction is warranted; a rejection needs a reason.
+  erasure:
+    basis: "Act s.12(3), s.8(7)"
+    summary: Erase personal data unless retention is necessary for the purpose or required by law.
+    respond_within_days: 30
+    max_days: 90
+    prescribed: false
+    requesters: [principal, nominee]
+    review_by_default: false      # erasure cases are signed off through the evidence case log
+  withdrawal:
+    basis: "Act s.6(4)-(6)"
+    summary: Withdraw consent for a purpose, as easily as it was given; processing for it stops.
+    respond_within_days: 30
+    max_days: 90
+    prescribed: false
+    requesters: [principal, nominee]
+    review_by_default: false
+  nomination:
+    basis: "Act s.14; Rules r.14(4)"
+    summary: Nominate one or more individuals to exercise these rights in the event of death or incapacity.
+    respond_within_days: 7
+    max_days: 30
+    prescribed: false
+    requesters: [principal]
+    review_by_default: false
+    notes: Incapacity means inability to exercise the rights due to unsoundness of mind or infirmity of body (s.14(2)).
+  nominee_invocation:
+    basis: "Act s.14"
+    summary: A nominee asks to act for the Data Principal after death or incapacity.
+    respond_within_days: 15
+    max_days: 30
+    prescribed: false
+    requesters: [nominee]
+    review_by_default: true
+  grievance:
+    basis: "Act s.13; Rules r.14(3)"
+    summary: A complaint about how personal data was handled or a request was dealt with.
+    respond_within_days: 30
+    max_days: 90
+    prescribed: true              # r.14(3): respond within the published period, not exceeding ninety days
+    requesters: [principal, nominee]
+    review_by_default: false
+    notes: >-
+      Publish the response period. s.13(3): the Data Principal must exhaust this before approaching the
+      Data Protection Board of India.
+
+board_escalation: >-
+  If you are not satisfied with our response to your grievance, you may complain to the Data Protection
+  Board of India (DPDP Act s.13(3)), after using this grievance process.

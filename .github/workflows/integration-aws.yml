@@ -1,0 +1,67 @@
+# Live integration tests against YOUR AWS account. Manual trigger only.
+#
+# One-time setup (see docs/testing.md):
+#   1. terraform apply deploy/terraform/aws-integration in a non-production account
+#   2. create a GitHub environment named "aws-integration" with required reviewers, and set:
+#        variables: AWS_REGION, AWS_ROLE_ARN (terraform output test_role_arn),
+#                   optional BEDROCK_CHAT_MODEL_ID, BEDROCK_EMBEDDING_MODEL_ID, OPENAI_TEST_MODEL
+#        secrets:   optional OPENAI_API_KEY, ANTHROPIC_API_KEY
+# Nothing account-specific is stored in this repository.
+name: integration-aws
+on:
+  workflow_dispatch:
+    inputs:
+      ssm_prefix:
+        description: SSM prefix written by the integration Terraform stack
+        default: /dpdp-it
+        required: true
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: integration-aws
+  cancel-in-progress: false
+
+jobs:
+  live:
+    runs-on: ubuntu-latest
+    environment: aws-integration
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: postgres:16
+        env: {POSTGRES_PASSWORD: postgres, POSTGRES_DB: dpdp_it}
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check environment
+        run: |
+          test -n "${{ vars.AWS_ROLE_ARN }}" || { echo "::error::Set AWS_ROLE_ARN in the aws-integration environment"; exit 1; }
+          test -n "${{ vars.AWS_REGION }}" || { echo "::error::Set AWS_REGION in the aws-integration environment"; exit 1; }
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+          role-session-name: dpdp-integration-${{ github.run_id }}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -e ".[dev,aws,postgres,api,openai,anthropic]"
+      - name: Run live tests
+        env:
+          DPDP_IT_AWS: "1"
+          DPDP_IT_SSM_PREFIX: ${{ inputs.ssm_prefix }}
+          DPDP_IT_LINEAGE_URL: postgresql+psycopg://postgres:postgres@localhost:5432/dpdp_it
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          BEDROCK_CHAT_MODEL_ID: ${{ vars.BEDROCK_CHAT_MODEL_ID }}
+          BEDROCK_EMBEDDING_MODEL_ID: ${{ vars.BEDROCK_EMBEDDING_MODEL_ID }}
+          OPENAI_TEST_MODEL: ${{ vars.OPENAI_TEST_MODEL }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: pytest tests/integration -m integration -v -rA --junitxml=integration-results.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: {name: integration-results, path: integration-results.xml}

@@ -1,0 +1,121 @@
+# Production template for AWS (ECS Fargate stack in deploy/terraform/aws).
+#
+# Copy this file OUTSIDE the repository (or to a git-ignored path), edit purposes and connectors
+# for your agent, and pass its path to Terraform (var.dpdp_config_file). Terraform uploads it to
+# SSM Parameter Store and the containers load it with DPDP_CONFIG=ssm:///<prefix>/config.
+#
+# Every ${VAR} below is set on the ECS tasks by Terraform, except the ones marked "you set"
+# (pass them through var.extra_environment). See docs/configuration.md for the full list.
+environment: production
+tenant: ${TENANT}
+
+provider:
+  type: bedrock
+  model: ${BEDROCK_MODEL_ID}                     # inference profile or model ID enabled in your account
+  embedding_model: ${BEDROCK_EMBEDDING_MODEL_ID:-amazon.titan-embed-text-v2:0}
+  region: ${AWS_REGION}
+  options:
+    guardrail_id: ${BEDROCK_GUARDRAIL_ID:-}       # optional, you set
+
+pii:
+  detectors: [regex, aws_comprehend]
+  region: ${AWS_REGION}
+  min_score: 0.85
+
+vault:
+  key_wrapper: aws_kms
+  kms_key_id: ${DPDP_KMS_KEY_ARN}
+  storage: dynamodb
+  dynamodb_table_prefix: ${DPDP_VAULT_TABLE_PREFIX}
+  region: ${AWS_REGION}
+  cache_ttl_seconds: 300
+  sealed_key_wrapper: aws_kms
+  sealed_kms_key_id: ${DPDP_SEALED_KMS_KEY_ARN}
+  sealed_role_arn: ${DPDP_BREAK_GLASS_ROLE_ARN}
+
+lineage:
+  url: postgresql+psycopg://${DPDP_DB_USER}:${DPDP_DB_PASSWORD!url}@${DPDP_DB_HOST}:${DPDP_DB_PORT:-5432}/${DPDP_DB_NAME}?sslmode=require
+
+api:
+  auth:
+    mode: ${DPDP_AUTH_MODE:-both}                 # both | api_key | oidc
+    api_keys:
+      - {name: backend, sha256: "${DPDP_SERVICE_KEY_SHA256}", roles: [service]}
+    oidc:
+      issuer: https://cognito-idp.${AWS_REGION}.amazonaws.com/${COGNITO_USER_POOL_ID}
+      audience: ${COGNITO_APP_CLIENT_ID}
+      roles_claim: cognito:groups                 # Cognito groups: principal, dpo, approver
+      algorithms: [RS256]
+
+certificates:
+  signer: aws_kms
+  key_id: ${DPDP_CERT_SIGNING_KEY_ARN}
+  archive: s3
+  archive_uri: s3://${DPDP_CERT_BUCKET}/certificates
+  archive_mode: ${DPDP_CERT_LOCK_MODE:-COMPLIANCE}
+  retain_days: ${DPDP_CERT_RETAIN_DAYS:-3650}
+  region: ${AWS_REGION}
+
+break_glass:
+  require_second_approver: true
+  max_grant_minutes: 30
+
+observability:
+  otel: true
+  service_name: dpdp-rights
+  otlp_endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://localhost:4318}    # ADOT sidecar
+  tokenize_spans: true
+
+# ---- edit for your agent -------------------------------------------------------
+purposes:
+  - {id: service_delivery, description: Deliver the service the customer signed up for}
+  - {id: analytics, description: Aggregate analytics}
+  - {id: marketing, description: Marketing and cross-sell}
+  # Example legal hold (validate with counsel):
+  # - {id: kyc_regulatory, legal_basis: legitimate_use, legal_hold_basis: "KYC record keeping"}
+
+connectors:
+  # Created by the Terraform stack: the framework's own logs and traces.
+  - name: cloudwatch
+    type: aws_cloudwatch_logs
+    options:
+      region: ${AWS_REGION}
+      log_group_names: ["${DPDP_API_LOG_GROUP}", "${DPDP_WORKER_LOG_GROUP}"]
+  - name: xray
+    type: aws_xray
+    options: {region: "${AWS_REGION}", lookback_hours: 720}
+
+  # Add the stores your agent writes to (uncomment and set the variables via var.extra_environment).
+  # - name: agentcore_memory
+  #   type: aws_agentcore_memory
+  #   options: {memory_id: "${AGENTCORE_MEMORY_ID}", region: "${AWS_REGION}", namespaces: ["/users/{actorId}/facts"]}
+  # - name: agentcore_identity
+  #   type: aws_agentcore_identity
+  #   options: {cognito_user_pool_id: "${COGNITO_USER_POOL_ID}", region: "${AWS_REGION}"}
+  # - name: agent_logs
+  #   type: aws_cloudwatch_logs
+  #   options: {region: "${AWS_REGION}", log_group_names: [aws/spans, "/aws/bedrock-agentcore/runtimes/${AGENT_RUNTIME_ID}-DEFAULT"]}
+  # - name: kb
+  #   type: aws_bedrock_kb
+  #   options: {knowledge_base_id: "${KB_ID}", data_source_id: "${KB_DATA_SOURCE_ID}", region: "${AWS_REGION}"}
+  # - name: transcripts
+  #   type: aws_s3_objects
+  #   options: {bucket: "${TRANSCRIPT_BUCKET}", prefix_template: "transcripts/{principal_id}/"}
+  # - name: applications
+  #   type: sql_table
+  #   options: {url: "${APP_DB_URL}", table: applications, id_column: id, content_column: body, principal_column: principal_id}
+
+policy:
+  aggregate_k_threshold: 10
+  sla_days: 30
+
+# Rights workflow (docs/rights.md). Fill in before go-live: these feed the Rule 14(1) notice and access reports.
+rights:
+  rule_set: dpdp-in
+  # rule_sets_dir: /etc/dpdp/rules     # your counsel-reviewed rule-set versions
+  # overrides: {grievance: {respond_within_days: 15}}   # the periods you publish; grievances at most 90
+  channels: []        # e.g. [{name: Mobile app, how: "Profile > Privacy > My data rights"}]
+  identifiers: []     # e.g. ["Policy number", "Registered mobile number"]
+  contact: null       # e.g. "Data Protection Officer, dpo@example.com"
+  recipients: []      # e.g. [{store: <connector>, name: "<processor>", role: processor, description: "..."}]
+

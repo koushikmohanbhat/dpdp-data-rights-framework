@@ -1,0 +1,35 @@
+# AWS Distro for OpenTelemetry (ADOT) collector: framework + agent spans -> X-Ray, metrics -> CloudWatch.
+# The framework already tokenises spans in-process (TokenizingSpanExporter). The transform
+# processor below masks common Indian identifiers as defence in depth for spans from other services.
+# Used as the ECS sidecar config by deploy/terraform/aws (AOT_CONFIG_CONTENT).
+receivers:
+  otlp:
+    protocols:
+      http: {endpoint: 0.0.0.0:4318}
+      grpc: {endpoint: 0.0.0.0:4317}
+
+processors:
+  batch: {}
+  transform/mask_pii:
+    error_mode: ignore
+    trace_statements:
+      - context: span
+        statements:
+          - replace_all_patterns(attributes, "value", "[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)+", "[EMAIL]")
+          - replace_all_patterns(attributes, "value", "(\\+91[\\- ]?)?[6-9][0-9]{4}[\\- ]?[0-9]{5}", "[PHONE]")
+          - replace_all_patterns(attributes, "value", "[2-9][0-9]{3}[ -]?[0-9]{4}[ -]?[0-9]{4}", "[AADHAAR]")
+          - replace_all_patterns(attributes, "value", "[A-Z]{3}[ABCFGHLJPT][A-Z][0-9]{4}[A-Z]", "[PAN]")
+
+exporters:
+  awsxray:
+    region: ${env:AWS_REGION}
+    indexed_attributes: [dpdp.principal, dpdp.purpose, dpdp.request_id]   # -> annotations used by the aws_xray connector
+  awsemf:
+    region: ${env:AWS_REGION}
+    namespace: DPDPRights
+    resource_to_telemetry_conversion: {enabled: true}
+
+service:
+  pipelines:
+    traces: {receivers: [otlp], processors: [transform/mask_pii, batch], exporters: [awsxray]}
+    metrics: {receivers: [otlp], processors: [batch], exporters: [awsemf]}

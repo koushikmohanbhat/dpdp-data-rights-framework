@@ -1,0 +1,101 @@
+# Domain pack: lending (banks, NBFCs, digital lenders and their lending service providers). Not legal advice:
+# every legal hold, basis and period below is an example for counsel to confirm, and to record in `reviewed`.
+id: lending
+title: Lending - loan origination, servicing and collections agents
+version: "2026.11-1"
+reviewed: null
+summary: >-
+  Purposes, legal holds, policy rules, identifier patterns, rights settings, an inventory and offline
+  scenarios for AI agents that take loan applications, assess credit, service loans and handle collections.
+
+sources:
+  - law: "Prevention of Money-laundering Act 2002, s.12; PML (Maintenance of Records) Rules 2005; RBI KYC Master Direction 2016"
+    what: >-
+      Records of identity and addresses, account files and business correspondence are kept for at least five
+      years after the business relationship ends or the account is closed, whichever is later; transaction
+      records for at least five years from the transaction.
+    purposes: [kyc_aml, loan_account]
+  - law: "RBI (Digital Lending) Directions 2025"
+    what: >-
+      Data collection must be need-based with explicit consent and an audit trail. Borrowers can deny or revoke
+      consent, restrict sharing and ask for deletion. Data is stored in India; data processed abroad is deleted
+      there and brought back. Digital lending apps may not access contacts, call logs or media (one-time KYC
+      access with consent aside); biometric data is not stored unless a law allows it. A privacy and
+      retention policy, including destruction protocols, is published.
+    purposes: [loan_application, credit_assessment, marketing]
+  - law: "Credit Information Companies (Regulation) Act 2005"
+    what: >-
+      Lenders report credit information to credit information companies, which hold it as separate
+      fiduciaries. Erasure at the lender does not remove bureau records; list bureaus as recipients.
+    purposes: [credit_assessment, loan_account]
+  - law: "DPDP Act 2023, s.7"
+    what: Record keeping required by law is modelled here as legitimate use; confirm the clause with counsel.
+    purposes: [kyc_aml, loan_account]
+
+config:
+  purposes:
+    - id: loan_application
+      description: Answer questions and collect a loan application through the AI agent
+    - id: credit_assessment
+      description: Pull bureau reports, assess income and decide on the application
+    - id: loan_account
+      description: Sanctioned loan records, repayments and statements
+      legal_basis: legitimate_use
+      legal_hold_basis: >-
+        PMLA 2002 s.12 and RBI KYC Master Direction: account files and transaction records kept at least five
+        years after the account is closed. Validate with counsel.
+    - id: kyc_aml
+      description: Customer identification, CKYC and anti-money-laundering checks
+      legal_basis: legitimate_use
+      legal_hold_basis: >-
+        PMLA 2002 s.12: identity records kept five years after the business relationship ends or the account is
+        closed, whichever is later. Validate with counsel.
+    - id: collections
+      description: Reminders and recovery for overdue loans
+    - id: marketing
+      description: Pre-approved offers and cross-sell
+    - id: analytics
+      description: Portfolio, risk and funnel analytics
+    - id: model_improvement
+      description: Evaluate and improve the AI agent with real interactions
+
+  policy:
+    default_action: delete
+    aggregate_k_threshold: 10
+    rules:
+      - kind: eval_row
+        action: delete
+        reason: Evaluation rows are replaceable; never keep personal data in golden sets
+      - kind: memory_record
+        action: delete
+        reason: Long-term assistant memory has no retention basis once the purpose ends
+      - kind: cache_entry
+        action: delete
+        reason: Cached answers are rebuilt on demand
+      - purpose: credit_assessment
+        kind: record
+        action: delete
+        reason: "Bureau report copies for a declined or withdrawn application: delete at the lender (the bureau keeps its own record)"
+
+  pii:
+    patterns:
+      - type: LOAN_ACCOUNT
+        regex: '\b(?=[A-Z0-9\-]*\d)[A-Z0-9][A-Z0-9\-]{7,24}\b'
+        context: ["loan account", "loan a/c", "loan no", "loan number", "lan:", "lan "]
+    # CKYC numbers, bank accounts, PAN, Aadhaar, UPI and mobile numbers are built in.
+
+  rights:
+    identifiers: ["Loan account number or application number", "Registered mobile number"]
+    recipients:
+      - {store: bureau_reports, name: "Credit information companies (CIBIL, Experian, Equifax, CRIF High Mark)",
+         role: fiduciary, description: "Receive repayment information we report and provide credit reports"}
+      - {store: collections_agency, name: "Collection agency", role: processor,
+         description: "Contacts you about overdue amounts on our behalf"}
+      - {store: lsp_platform, name: "Lending service provider", role: processor,
+         description: "Runs the lending app and sourcing for us"}
+
+notes:
+  - Digital lending apps must not collect contacts, call logs or media; add a check in code review and verification.
+  - Data processed outside India must be deleted there; the coverage report flags systems in non-India regions.
+  - Repayment data already reported to a credit information company stays with that company; disclose it in access reports.
+  - Collections calls are often recorded by an agency; record that store with a manual procedure if it has no connector.

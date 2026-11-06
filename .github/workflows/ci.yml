@@ -1,0 +1,72 @@
+name: ci
+on: [push, pull_request]
+permissions: {contents: read}
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix: { python: ["3.10", "3.12", "3.13"] }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "${{ matrix.python }}" }
+      - run: pip install -e ".[dev]"
+      - run: ruff check src tests
+      - run: pytest -q
+      - run: cd /tmp && python $GITHUB_WORKSPACE/examples/insurance_onboarding/demo.py --html && test -s .dpdp/report.html
+      - name: domain pack scenarios
+        run: dpdp-rights packs test all
+      - name: demo evidence bundle and audit pack verify offline
+        run: cd /tmp && for z in .dpdp/evidence/*.zip; do dpdp-rights evidence verify "$z"; done
+      - name: example plug-in (entry points + conformance kit)
+        run: |
+          pip install -e examples/plugin_example
+          ruff check examples
+          pytest -q examples/plugin_example
+          dpdp-rights plugins | grep dpdp-rights-example-plugin
+      - name: coverage report on the example inventory
+        run: dpdp-rights -c config/dpdp.local.yaml coverage --inventory examples/insurance_onboarding/inventory.yaml --format html --output /tmp/coverage.html
+      - name: production configs pass guardrails
+        env:
+          DPDP_LINEAGE_URL: postgresql+psycopg://ci:ci@db/dpdp
+          DPDP_SERVICE_KEY_SHA256: "0000000000000000000000000000000000000000000000000000000000000000"
+        run: |
+          dpdp-rights -c config/dpdp.production.aws.yaml check-config
+          dpdp-rights -c config/dpdp.production.gcp.yaml check-config
+  test-postgres:              # production control plane runs on PostgreSQL; SQLite hides some bugs
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env: {POSTGRES_PASSWORD: postgres}
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -e ".[dev,postgres]"
+      - run: pytest -q
+        env:
+          DPDP_TEST_PG_URL: postgresql+psycopg://postgres:postgres@localhost:5432/postgres
+  audit:
+    runs-on: ubuntu-latest
+    continue-on-error: true      # advisory: surfaces CVEs in dependencies without blocking PRs
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -e . pip-audit && pip-audit
+  terraform:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix: { stack: ["deploy/terraform/aws", "deploy/terraform/aws-integration", "deploy/terraform/gcp"] }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: hashicorp/setup-terraform@v3
+      - name: fmt (advisory)
+        run: terraform -chdir=${{ matrix.stack }} fmt -check -diff || echo "::warning::run terraform fmt"
+      - run: terraform -chdir=${{ matrix.stack }} init -backend=false -input=false
+      - run: terraform -chdir=${{ matrix.stack }} validate

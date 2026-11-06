@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dpdp-rights-example-plugin"
+version = "0.1.0"
+description = "Example plug-in for the DPDP Data Rights Framework: a CSV connector, an employee-ID detector and a file notifier"
+requires-python = ">=3.10"
+license = { text = "Apache-2.0" }
+dependencies = ["dpdp-data-rights-framework"]
+
+[project.optional-dependencies]
+test = ["pytest>=8"]
+
+# The entry-point name is the type name used in framework configs.
+[project.entry-points."dpdp_rights.connectors"]
+csv_records = "dpdp_example_plugin.csv_connector:CsvRecordsConnector"
+
+[project.entry-points."dpdp_rights.detectors"]
+employee_id = "dpdp_example_plugin.detectors:EmployeeIdDetector"
+
+[project.entry-points."dpdp_rights.notifiers"]
+jsonl_outbox = "dpdp_example_plugin.notifiers:JsonlOutboxNotifier"
+
+[tool.setuptools.packages.find]
+where = ["src"]

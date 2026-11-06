@@ -1,0 +1,35 @@
+# Starting inventory for a lending AI agent. Rename, fill in and delete what does not apply.
+# Fields: partner-pack/inventory.template.yaml.  Run: dpdp-rights -c dpdp.yaml coverage --inventory inventory.yaml
+engagement:
+  client: "<client>"
+  system: Loan origination, servicing and collections agent
+  prepared_by: "<partner team>"
+  dpo: "<dpo contact>"
+
+systems:
+  - {name: Agent conversations, category: database, data_elements: [NAME, PHONE_IN, PAN, BANK_ACCOUNT, FREE_TEXT],
+     purposes: [loan_application], region: ap-south-1, owner: Digital, connector: agent_chats}
+  - {name: Agent memory, category: agent_memory, data_elements: [NAME, PHONE_IN, FREE_TEXT],
+     purposes: [loan_application], region: ap-south-1, owner: Digital, connector: agent_memory}
+  - {name: Loan origination system, category: database, data_elements: [NAME, PAN, AADHAAR, BANK_ACCOUNT, ADDRESS],
+     purposes: [loan_application, credit_assessment], region: ap-south-1, owner: Credit, connector: los}
+  - {name: Bureau report store, category: object_store, data_elements: [NAME, PAN, FREE_TEXT],
+     purposes: [credit_assessment], region: ap-south-1, owner: Credit, connector: bureau_reports}
+  - {name: Loan management system, category: database, data_elements: [NAME, PHONE_IN, LOAN_ACCOUNT, BANK_ACCOUNT],
+     purposes: [loan_account], region: ap-south-1, owner: Operations, connector: loan_system}
+  - {name: KYC and CKYC records, category: object_store, data_elements: [NAME, PAN, AADHAAR, CKYC_NUMBER, ADDRESS],
+     purposes: [kyc_aml], region: ap-south-1, owner: Compliance, connector: kyc_vault}
+  - {name: Lending service provider app, category: saas, data_elements: [NAME, PHONE_IN, FREE_TEXT],
+     purposes: [loan_application], region: ap-south-1, processor: "<LSP>", processor_contract: "<clause>",
+     connector: lsp_platform, notes: "RBI Digital Lending Directions: no contacts, call logs or media; data in India"}
+  - {name: Collection agency, category: saas, data_elements: [NAME, PHONE_IN, LOAN_ACCOUNT], purposes: [collections],
+     processor: "<agency>", processor_contract: "<clause>", connector: collections_agency}
+  - {name: Credit information companies, category: saas, data_elements: [NAME, PAN, LOAN_ACCOUNT],
+     purposes: [loan_account], owner: Compliance, holds_personal_data: true,
+     manual_procedure: "<separate fiduciaries: disclose in access reports; correct via the bureau dispute process>"}
+  - {name: Offers audience, category: saas, data_elements: [PHONE_IN, EMAIL], purposes: [marketing],
+     processor: "<platform>", processor_contract: "<clause>", connector: offers_audience}
+  - {name: Agent evaluation set, category: dataset, data_elements: [FREE_TEXT], purposes: [model_improvement],
+     region: ap-south-1, owner: AI team, connector: agent_eval_set}
+  - {name: Application logs and traces, category: logs, data_elements: [FREE_TEXT], purposes: [loan_application],
+     region: ap-south-1, owner: Platform, retention_days: 400, connector: app_log}

@@ -1,0 +1,38 @@
+# Starting inventory for an insurance AI agent. Rename systems and connectors to the client's, fill in
+# owners, regions, processors and test dates, and delete what does not apply. Fields:
+# partner-pack/inventory.template.yaml.  Run: dpdp-rights -c dpdp.yaml coverage --inventory inventory.yaml
+engagement:
+  client: "<client>"
+  system: Onboarding, servicing and claims agent
+  prepared_by: "<partner team>"
+  dpo: "<dpo contact>"
+
+systems:
+  - {name: Agent conversations, category: database, data_elements: [NAME, EMAIL, PHONE_IN, PAN, AADHAAR, FREE_TEXT],
+     purposes: [quote_and_onboarding, servicing], region: ap-south-1, owner: Digital, connector: agent_chats}
+  - {name: Transcript search index, category: vector_store, data_elements: [NAME, FREE_TEXT],
+     purposes: [quote_and_onboarding], region: ap-south-1, owner: Digital, connector: transcript_index}
+  - {name: Agent memory, category: agent_memory, data_elements: [NAME, PHONE_IN, FREE_TEXT],
+     purposes: [quote_and_onboarding, servicing], region: ap-south-1, owner: Digital, connector: agent_memory}
+  - {name: Proposal and underwriting system, category: database, data_elements: [NAME, PAN, FREE_TEXT],
+     purposes: [underwriting], region: ap-south-1, owner: Underwriting, connector: applications,
+     notes: "Medical disclosures are health data"}
+  - {name: Policy administration system, category: database, data_elements: [NAME, EMAIL, PHONE_IN, POLICY_NUMBER, VEHICLE_REG],
+     purposes: [policy_records, servicing], region: ap-south-1, owner: Operations, connector: policy_admin}
+  - {name: Claims system, category: database, data_elements: [NAME, POLICY_NUMBER, CLAIM_NUMBER, FREE_TEXT],
+     purposes: [claims], region: ap-south-1, owner: Claims, connector: claims_system}
+  - {name: KYC repository, category: object_store, data_elements: [NAME, PAN, AADHAAR, ADDRESS],
+     purposes: [kyc_aml], region: ap-south-1, owner: Compliance, connector: kyc_vault}
+  - {name: TPA claims feed, category: saas, data_elements: [NAME, PHONE_IN, POLICY_NUMBER, FREE_TEXT],
+     purposes: [claims], region: ap-south-1, owner: Claims, processor: "<TPA>", processor_contract: "<clause>",
+     connector: tpa_feed}
+  - {name: Reinsurer submissions, category: saas, data_elements: [NAME, FREE_TEXT], purposes: [underwriting],
+     owner: Reinsurance, processor: "<reinsurer>", manual_procedure: "<runbook: instruct the reinsurer by email>"}
+  - {name: Campaign audiences, category: saas, data_elements: [EMAIL, PHONE_IN], purposes: [marketing],
+     owner: Marketing, processor: "<email/SMS platform>", processor_contract: "<clause>", connector: campaign_audience}
+  - {name: Agent evaluation set, category: dataset, data_elements: [FREE_TEXT], purposes: [model_improvement],
+     region: ap-south-1, owner: AI team, connector: agent_eval_set}
+  - {name: Application logs and traces, category: logs, data_elements: [FREE_TEXT], purposes: [servicing],
+     region: ap-south-1, owner: Platform, retention_days: 400, connector: app_log}
+  - {name: Call-centre recordings, category: saas, data_elements: [NAME, PHONE_IN, FREE_TEXT], purposes: [servicing],
+     owner: Customer service, processor: "<contact-centre vendor>", manual_procedure: "<runbook>"}

@@ -1,0 +1,96 @@
+# Domain pack: healthcare (hospitals, clinics, telemedicine, diagnostics, health apps). Not legal advice:
+# every legal hold, basis and period below is an example for counsel to confirm, and to record in `reviewed`.
+id: healthcare
+title: Healthcare - appointment, triage, care and claims agents
+version: "2026.11-1"
+reviewed: null
+summary: >-
+  Purposes, legal holds, policy rules, identifier patterns, rights settings, an inventory and offline
+  scenarios for AI agents that book appointments, triage symptoms, support care teams and file claims.
+
+sources:
+  - law: "Indian Medical Council (Professional Conduct, Etiquette and Ethics) Regulations 2002, reg. 1.3"
+    what: >-
+      1.3.1: medical records of indoor patients are kept for three years from the commencement of treatment.
+      1.3.2: records requested by the patient, an authorised attendant or legal authorities are issued within
+      72 hours. The NMC's 2023 conduct regulations were held in abeyance; check what is in force, and any
+      longer period in state clinical establishment rules or for medico-legal cases.
+    purposes: [clinical_records]
+  - law: "Ayushman Bharat Digital Mission (ABDM): ABHA number and ABHA address"
+    what: >-
+      Linking records to a patient's ABHA and sharing them through ABDM runs on the patient's consent through
+      ABDM's consent manager. Treat linking as its own purpose so it can be withdrawn without affecting care.
+    purposes: [abdm_linking]
+  - law: "DPDP Act 2023, s.7"
+    what: >-
+      Legitimate uses include responding to a medical emergency involving a threat to life or health, and
+      compliance with law. Record keeping required by law is modelled here as legitimate use; confirm the
+      clause with counsel.
+    purposes: [clinical_records]
+
+config:
+  purposes:
+    - id: appointment_and_triage
+      description: Book appointments and triage symptoms through the AI agent
+    - id: care_delivery
+      description: Consultation, diagnosis and treatment, including care-team summaries
+    - id: clinical_records
+      description: Medical records that must be kept after treatment
+      legal_basis: legitimate_use
+      legal_hold_basis: >-
+        Example: indoor-patient medical records kept for three years from the start of treatment (IMC
+        Regulations 2002, reg. 1.3.1), or longer under state clinical establishment rules or medico-legal
+        holds. Validate with counsel.
+    - id: abdm_linking
+      description: Link records to the patient's ABHA and share them through ABDM with consent
+    - id: insurance_claims
+      description: Cashless approvals and claims with the patient's insurer or TPA
+    - id: research_and_quality
+      description: De-identified quality improvement and research
+    - id: model_improvement
+      description: Evaluate and improve the AI agent with real interactions
+    - id: marketing
+      description: Health check-up packages and reminders not related to ongoing care
+
+  policy:
+    default_action: delete
+    aggregate_k_threshold: 20          # health aggregates: use a higher k than other domains
+    rules:
+      - kind: eval_row
+        action: delete
+        reason: Evaluation rows are replaceable; never keep health data in golden sets
+      - kind: memory_record
+        action: delete
+        reason: Long-term assistant memory has no retention basis once the purpose ends
+      - kind: cache_entry
+        action: delete
+        reason: Cached answers are rebuilt on demand
+      - kind: finetune_row
+        action: delete
+        reason: Remove from training sets; models already trained are flagged for retraining
+
+  pii:
+    patterns:
+      - type: UHID
+        regex: '\b(?=[A-Z0-9\-]*\d)[A-Z0-9][A-Z0-9\-]{5,20}\b'
+        context: ["uhid", "mrn", "mr no", "patient id", "ip no", "op no", "registration no"]
+    # ABHA numbers and ABHA addresses (name@abdm) are built in. Diagnoses, medicines and symptoms are free
+    # text: add an NER, cloud or LLM detector in production; regex alone will not find them.
+
+  rights:
+    identifiers: ["Hospital UHID / MRN", "Registered mobile number", "ABHA number or address (optional)"]
+    overrides:
+      access: {respond_within_days: 3, notes: "Aligned with the 72-hour medical-records rule (IMC 2002 reg. 1.3.2); the DPDP access summary is a separate obligation"}
+    recipients:
+      - {store: insurer_tpa, name: "Your insurer or third-party administrator", role: fiduciary,
+         description: "Receives clinical details for cashless approval and claims"}
+      - {store: lab_partner, name: "Diagnostic laboratory partner", role: processor,
+         description: "Runs tests we order for you"}
+      - {store: abdm_gateway, name: "ABDM health information exchange", role: fiduciary,
+         description: "Shares linked records with providers you approve through ABDM"}
+
+notes:
+  - Health data is sensitive by nature; restrict access reports to masked values unless the patient asks for copies.
+  - Children's records need verifiable parental consent (DPDP s.9), which this framework does not implement yet.
+  - Caregivers and family members often appear in a patient's record; register their identifiers so erasure redacts them.
+  - Medico-legal cases and litigation holds override the default record period; record them as a separate purpose with a hold.

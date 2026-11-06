@@ -10,7 +10,7 @@
 | Erase when consent is withdrawn or the purpose is no longer served; make processors erase too | Act s.8(7), s.6(6) | `withdraw_consent(..., erase=True)` runs a purpose-scoped erasure; connectors reach processor-held state (OpenAI, Anthropic, Bedrock, Vertex, SaaS stores) |
 | Consent specific to purpose; withdrawal as easy as giving it | Act s.6 | Consent ledger per principal x element type x purpose; `protect()` blocks processing without consent |
 | Legitimate uses without consent | Act s.7 | `legal_basis: legitimate_use` purposes skip the consent check |
-| Reasonable security safeguards (encryption, masking, tokenisation, access control, logs) | Act s.8(5); Rules r.6 | KMS-wrapped per-principal keys, tokenised logs/prompts/vectors, privileged-only reads of sealed data |
+| Reasonable security safeguards (encryption, masking, tokenisation, access control, logs) | Act s.8(5); Rules r.6 | Per-principal keys wrapped by AWS KMS / Cloud KMS, tokenised logs/prompts/vectors, privileged-only reads of sealed data |
 | Minimum one-year retention of personal data, traffic data and processing logs | Rules r.8(3) + Seventh Schedule | Statutory retention escrow: data leaves every operational/AI store at once; a sealed copy stays under an escrow key; `purge-escrows` destroys it after `policy.statutory_retention.days` |
 | Time-bound erasure for specified large platforms with 48-hour prior notice | Rules r.8(1)-(2) + Third Schedule | Not automated in v0.1. Use the lineage DB to find inactive principals, send notice, then call `erase()` (roadmap) |
 | Grievance redressal within 90 days | Rules r.14(3) | Requests carry `due_by` (configurable SLA, default 30 days) and an auditable action log |

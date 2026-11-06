@@ -190,7 +190,7 @@ CREATE INDEX ON lineage_edge (child_artifact_id);
 
 | Table | Key | Contents |
 |---|---|---|
-| `vault_key` | principal_id | DEK wrapped by KMS (encryption context / AAD = principal id) |
+| `vault_key` | principal_id | DEK wrapped by AWS KMS or Cloud KMS (encryption context / AAD = principal id) |
 | `vault_value` | token | AES-GCM ciphertext of the value (AAD = token), owner principal, type |
 | `vault_lookup` | HMAC(lookup key, type\|value) | principal id (resolves identifiers without storing them) |
 

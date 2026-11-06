@@ -28,7 +28,7 @@ Consent, meanwhile, was recorded once against the *customer*. Consent applies pe
 | Capability | What it gives you |
 |---|---|
 | **Purpose-based consent ledger** | Consent recorded per Data Principal × data element × purpose, with notice version and Consent Manager reference. Processing for a purpose without valid consent is blocked. |
-| **Tokenisation at the edge** | Personal data is detected (India-aware: Aadhaar with checksum, PAN, UPI, +91 phones, plus Comprehend / Bedrock Guardrails / Cloud DLP) and replaced with tokens *before* it reaches a model, log, index, cache or memory. Each person has their own KMS-wrapped key. |
+| **Tokenisation at the edge** | Personal data is detected (India-aware: Aadhaar with checksum, PAN, UPI, +91 phones, plus Comprehend / Bedrock Guardrails / Cloud DLP) and replaced with tokens *before* it reaches a model, log, index, cache or memory. Each person has their own encryption key, protected by your key management service (AWS KMS or Google Cloud KMS; a local key for development). |
 | **Data lineage graph** | Every artifact the agent creates is linked to the data elements it contains and the artifacts it was derived from, with typed edges: `copy`, `embed`, `transform`, `aggregate`, `train`. |
 | **Erasure orchestration** | On withdrawal or erasure request: discover copies (including ones nobody registered), decide per artifact (delete, redact, regenerate, crypto-shred, retain under legal hold, flag model for retraining), execute through native connectors. |
 | **Verification and evidence** | Every store is re-checked for tokens and raw values. A hash-chained erasure certificate records every action, exception and legal basis for the DPO or the Data Protection Board. |
@@ -44,7 +44,7 @@ Erasure becomes tractable because no store ever holds a raw identifier. Destroyi
 | On withdrawal, stop processing and make processors stop (s.6(6)) | `protect()` refuses further processing; connectors reach processor-held data (model providers, clouds, SaaS) |
 | Erase when consent is withdrawn or the purpose is served, unless law requires retention (s.8(7)) | Purpose-scoped and full erasure; legal-hold purposes |
 | Right to erasure on request (s.12(3)) | Rights API / CLI → orchestrator → certificate |
-| Reasonable security safeguards (s.8(5), Rule 6) | Tokenisation, per-person KMS keys, tokenised logs |
+| Reasonable security safeguards (s.8(5), Rule 6) | Tokenisation, per-person keys protected by AWS KMS / Cloud KMS, tokenised logs |
 | Minimum one-year retention of personal data, traffic data and logs (Rule 8(3)) | Sealed retention escrow with scheduled purge |
 | Grievance redressal within 90 days (Rule 14) | Requests carry an SLA `due_by` and a full audit trail |
 

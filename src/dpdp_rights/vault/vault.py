@@ -1,6 +1,7 @@
 """PII vault with per-principal keys.
 
-* Each data principal gets a random 256-bit DEK, stored wrapped by KMS.
+* Each data principal gets a random 256-bit DEK, stored wrapped by a key-encryption
+  key (KEK) held in AWS KMS, Google Cloud KMS, or a local file for development.
 * PII values are encrypted with that DEK; prompts, logs, embeddings and caches
   only ever see tokens like ``<EMAIL_3f9a1c0b7d2e>``.
 * Tokens are HMAC(DEK, type|value): stable per principal (so joins, caching and

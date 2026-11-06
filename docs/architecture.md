@@ -17,7 +17,7 @@ flowchart LR
   end
 
   subgraph CP["Control plane"]
-    VAULT[("PII vault<br/>per-principal DEK<br/>KMS-wrapped")]
+    VAULT[("PII vault<br/>per-principal key<br/>wrapped by AWS KMS / Cloud KMS")]
     LED[("Consent ledger<br/>principal x element x purpose")]
     LIN[("Lineage graph<br/>artifacts + edges")]
   end
@@ -90,7 +90,13 @@ Erasure gets cheap when no store ever holds a raw identifier:
 
 ## Key design choices
 
-1. **Per-principal DEK, KMS-wrapped.** Tokens are `HMAC(DEK, type|value)`: stable for joins,
+1. **One data key per person, wrapped by a cloud key management service.** Each Data Principal
+   gets a random data encryption key (DEK). The DEK is never stored in plaintext: it is encrypted
+   (wrapped) by a key-encryption key that never leaves the key service. The key service is pluggable
+   (`vault.key_wrapper`): `aws_kms` (AWS KMS, with the principal id as encryption context),
+   `gcp_kms` (Google Cloud KMS, with the principal id as additional authenticated data), or `local`
+   for development only. Azure Key Vault or HashiCorp Vault can be added by implementing the
+   two-method `KeyWrapper` interface (`wrap`, `unwrap`). Tokens are `HMAC(DEK, type|value)`: stable for joins,
    caching and retrieval, unlinkable once the DEK is gone. Same email for two principals
    yields different tokens.
 2. **Consent per element type and purpose.** `protect()` refuses to tokenise into a purpose

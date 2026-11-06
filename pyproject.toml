@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "dpdp-data-rights-framework"
-version = "0.1.0"
+version = "0.2.0"
 description = "Lineage-aware right-to-erasure (India DPDP Act) for LLM and agent systems on OpenAI, Anthropic, Amazon Bedrock and Google Vertex AI"
 readme = "README.md"
 license = { text = "Apache-2.0" }
@@ -31,10 +31,12 @@ gcp = [
   "google-cloud-storage>=2.14",
 ]
 redis = ["redis>=5"]
+otel = ["opentelemetry-api>=1.25", "opentelemetry-sdk>=1.25", "opentelemetry-exporter-otlp-proto-http>=1.25"]
+auth = ["PyJWT[crypto]>=2.8"]
 postgres = ["psycopg[binary]>=3.1"]
 api = ["fastapi>=0.110", "uvicorn>=0.29"]
-all = ["dpdp-data-rights-framework[openai,anthropic,aws,gcp,redis,postgres,api]"]
-dev = ["pytest>=8", "boto3>=1.40", "fastapi>=0.110", "httpx>=0.27", "ruff>=0.5"]
+all = ["dpdp-data-rights-framework[openai,anthropic,aws,gcp,redis,postgres,api,otel,auth]"]
+dev = ["pytest>=8", "boto3>=1.40", "fastapi>=0.110", "httpx>=0.27", "ruff>=0.5", "opentelemetry-sdk>=1.25", "PyJWT[crypto]>=2.8", "pip-audit>=2.7"]
 
 [project.scripts]
 dpdp-rights = "dpdp_rights.cli:main"

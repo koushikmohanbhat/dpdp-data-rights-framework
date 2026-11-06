@@ -1,0 +1,102 @@
+# Production reference for AWS. Passes `dpdp-rights check-config` with no errors.
+# Infra: deploy/terraform/aws (main.tf + security.tf). Collector: deploy/otel/collector-aws.yaml.
+environment: production
+tenant: ${TENANT:-acme-insurance}
+
+provider:
+  type: ${DPDP_PROVIDER:-bedrock}           # bedrock | anthropic (platform: bedrock) | openai
+  model: ${BEDROCK_MODEL_ID}
+  embedding_model: amazon.titan-embed-text-v2:0
+  region: ${AWS_REGION:-ap-south-1}
+  options:
+    guardrail_id: ${BEDROCK_GUARDRAIL_ID:-}
+
+pii:
+  detectors: [regex, aws_comprehend]          # regex for Aadhaar/PAN/UPI, Comprehend for names & addresses
+  region: ${AWS_REGION:-ap-south-1}
+  min_score: 0.85
+
+vault:
+  key_wrapper: aws_kms
+  kms_key_id: ${DPDP_KMS_KEY_ARN}
+  storage: dynamodb                           # separate account recommended
+  dynamodb_table_prefix: dpdp_vault
+  region: ${AWS_REGION:-ap-south-1}
+  cache_ttl_seconds: 300
+  sealed_key_wrapper: aws_kms
+  sealed_kms_key_id: ${DPDP_SEALED_KMS_KEY_ARN}
+  sealed_role_arn: ${DPDP_BREAK_GLASS_ROLE_ARN}
+
+lineage:
+  url: ${DPDP_LINEAGE_URL}                    # postgresql+psycopg://...@aurora:5432/dpdp?sslmode=require
+
+api:
+  auth:
+    mode: both
+    api_keys:
+      - {name: policy-admin-backend, sha256: "${DPDP_SERVICE_KEY_SHA256}", roles: [service]}
+    oidc:
+      issuer: https://cognito-idp.${AWS_REGION:-ap-south-1}.amazonaws.com/${COGNITO_USER_POOL_ID}
+      audience: ${COGNITO_APP_CLIENT_ID}
+      roles_claim: cognito:groups             # groups: principal, dpo, approver
+      algorithms: [RS256]
+
+verification:
+  required: true
+  channel: sms
+  notifier: aws_sns
+  region: ${AWS_REGION:-ap-south-1}
+
+certificates:
+  signer: aws_kms
+  key_id: ${DPDP_CERT_SIGNING_KEY_ARN}
+  archive: s3
+  archive_uri: s3://${DPDP_CERT_BUCKET}/certificates
+  retain_days: 3650
+  region: ${AWS_REGION:-ap-south-1}
+
+break_glass:
+  require_second_approver: true
+  max_grant_minutes: 30
+
+observability:
+  otel: true
+  service_name: dpdp-rights
+  otlp_endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://localhost:4318}
+  tokenize_spans: true
+
+purposes:
+  - {id: policy_issuance, description: Process the application and issue the policy}
+  - {id: analytics, description: Portfolio analytics}
+  - {id: marketing, description: Cross-sell and renewal campaigns}
+  - {id: model_improvement, description: Evaluate and improve the agent}
+  - {id: kyc_regulatory, legal_basis: legitimate_use, legal_hold_basis: "KYC record keeping (validate with counsel)"}
+
+connectors:
+  - name: agentcore_memory
+    type: aws_agentcore_memory
+    options: {memory_id: "${AGENTCORE_MEMORY_ID}", region: "${AWS_REGION:-ap-south-1}", namespaces: ["/users/{actorId}/facts"]}
+  - name: agentcore_identity
+    type: aws_agentcore_identity
+    options: {cognito_user_pool_id: "${COGNITO_USER_POOL_ID}", region: "${AWS_REGION:-ap-south-1}"}
+  - name: cloudwatch
+    type: aws_cloudwatch_logs
+    options:
+      region: ${AWS_REGION:-ap-south-1}
+      log_group_names: [aws/spans, "/aws/bedrock-agentcore/runtimes/${AGENT_RUNTIME_ID}-DEFAULT", /aws/bedrock/modelinvocations]
+  - name: xray
+    type: aws_xray
+    options: {region: "${AWS_REGION:-ap-south-1}", lookback_hours: 720}
+  - name: kb
+    type: aws_bedrock_kb
+    options: {knowledge_base_id: "${KB_ID}", data_source_id: "${KB_DATA_SOURCE_ID}", region: "${AWS_REGION:-ap-south-1}"}
+  - name: applications
+    type: sql_table
+    options: {url: "${APP_DB_URL}", table: applications, id_column: id, content_column: body, principal_column: principal_id}
+  - name: vectors
+    type: sql_table
+    options: {url: "${APP_DB_URL}", table: chunks, id_column: id, content_column: chunk, kind: embedding}
+
+policy:
+  aggregate_k_threshold: 10
+  sla_days: 30

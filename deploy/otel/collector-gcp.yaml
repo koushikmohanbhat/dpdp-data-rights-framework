@@ -1,0 +1,28 @@
+# OpenTelemetry Collector (contrib) on GCP: spans -> Cloud Trace, metrics -> Cloud Monitoring.
+receivers:
+  otlp:
+    protocols:
+      http: {endpoint: 0.0.0.0:4318}
+      grpc: {endpoint: 0.0.0.0:4317}
+
+processors:
+  batch: {}
+  resourcedetection: {detectors: [gcp]}
+  redaction:
+    allow_all_keys: true
+    blocked_values:
+      - "[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)+"
+      - "(\\+91[\\- ]?)?[6-9][0-9]{4}[\\- ]?[0-9]{5}"
+      - "[2-9][0-9]{3}[ -]?[0-9]{4}[ -]?[0-9]{4}"
+      - "[A-Z]{3}[ABCFGHLJPT][A-Z][0-9]{4}[A-Z]"
+    summary: info
+
+exporters:
+  googlecloud:
+    project: ${env:GOOGLE_CLOUD_PROJECT}
+  googlemanagedprometheus: {}
+
+service:
+  pipelines:
+    traces: {receivers: [otlp], processors: [resourcedetection, redaction, batch], exporters: [googlecloud]}
+    metrics: {receivers: [otlp], processors: [resourcedetection, batch], exporters: [googlemanagedprometheus]}

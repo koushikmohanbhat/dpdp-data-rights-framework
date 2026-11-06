@@ -6,6 +6,9 @@
   dpdp-rights -c ... connectors
   dpdp-rights -c ... purge-escrows
   dpdp-rights -c ... serve --port 8080
+  dpdp-rights -c ... worker [--once]
+  dpdp-rights -c ... verify-certificate --request-id er_...
+  dpdp-rights -c ... sla | check-config | hash-api-key <key>
 """
 from __future__ import annotations
 
@@ -44,9 +47,35 @@ def main(argv: list[str] | None = None) -> None:
     sv = sub.add_parser("serve")
     sv.add_argument("--host", default="0.0.0.0")
     sv.add_argument("--port", type=int, default=8080)
+    w = sub.add_parser("worker", help="process erasure jobs from the durable queue")
+    w.add_argument("--once", action="store_true", help="drain the queue once and exit (Cloud Run job / cron)")
+    w.add_argument("--poll", type=float, default=5.0)
+    vc = sub.add_parser("verify-certificate")
+    vc.add_argument("--request-id", required=True)
+    sub.add_parser("sla", help="open requests by SLA bucket and queue depth")
+    sub.add_parser("check-config", help="list production guardrail issues for this config")
+    hk = sub.add_parser("hash-api-key", help="print the sha256 to put in api.auth.api_keys")
+    hk.add_argument("key")
     a = ap.parse_args(argv)
 
+    if a.cmd == "hash-api-key":
+        from .security.auth import hash_api_key
+
+        print(hash_api_key(a.key))
+        return
+    if a.cmd == "check-config":
+        from .core.config import FrameworkConfig
+        from .security.guardrails import production_issues
+
+        issues = production_issues(FrameworkConfig.load(a.config))
+        print(json.dumps([{"level": lvl, "issue": m} for lvl, m in issues], indent=2))
+        sys.exit(1 if any(lvl == "error" for lvl, _ in issues) else 0)
+
     dpdp = DataRightsFramework.from_yaml(a.config)
+    if dpdp.config.observability.otel and a.cmd in ("serve", "worker"):
+        from .observability.telemetry import install
+
+        install(dpdp)
     if a.cmd == "erase":
         out = dpdp.erase(_pid(dpdp, a), scope=a.scope, dry_run=a.dry_run, requested_via="cli")
     elif a.cmd == "lineage":
@@ -58,12 +87,25 @@ def main(argv: list[str] | None = None) -> None:
         out = dpdp.purge_due_escrows()
     elif a.cmd == "connectors":
         out = {n: type(c).type_name for n, c in dpdp.connectors.items()}
+    elif a.cmd == "verify-certificate":
+        out = dpdp.verify_certificate(a.request_id)
+    elif a.cmd == "sla":
+        out = {"open_requests": dpdp.sla_counts(), "jobs": dpdp.queue.counts()}
+    elif a.cmd == "worker":
+        import time
+
+        while True:
+            for r in dpdp.process_jobs():
+                print(json.dumps(r, default=str), flush=True)
+            if a.once:
+                return
+            time.sleep(a.poll)
     else:
         import uvicorn
 
         from .api.app import create_app
 
-        uvicorn.run(create_app(dpdp), host=a.host, port=a.port)
+        uvicorn.run(create_app(dpdp), host=a.host, port=a.port, server_header=False)
         return
     print(json.dumps(out, indent=2, default=str))
 

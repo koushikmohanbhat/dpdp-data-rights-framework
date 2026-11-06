@@ -114,6 +114,11 @@ erasure_request = Table(
     Column("received_at", DateTime(timezone=True), nullable=False),
     Column("due_by", DateTime(timezone=True)),
     Column("completed_at", DateTime(timezone=True)),
+    Column("idempotency_key", String(128), unique=True),
+    Column("requested_by", String(128)),                 # authenticated caller (role:name)
+    Column("verification_method", String(32)),           # otp | authenticated_session | dpo_attested
+    Column("verification_evidence", Text),
+    Column("verified_at", DateTime(timezone=True)),
 )
 erasure_action = Table(
     "erasure_action", md,
@@ -134,6 +139,60 @@ erasure_certificate = Table(
     Column("sha256", String(64), nullable=False),
     Column("prev_sha256", String(64)),
     Column("issued_at", DateTime(timezone=True), nullable=False),
+    Column("signature", Text),                            # base64; over sha256 of payload
+    Column("signer", String(256)),                        # key id used to sign
+    Column("archive_uri", Text),                          # immutable copy (S3 Object Lock / GCS lock / local)
+)
+
+job = Table(
+    "job", md,
+    Column("job_id", String(64), primary_key=True),
+    Column("kind", String(32), nullable=False),
+    Column("payload", JSON, nullable=False),
+    Column("status", String(16), nullable=False, index=True),     # queued | running | done | failed
+    Column("attempts", Integer, nullable=False, default=0),
+    Column("max_attempts", Integer, nullable=False, default=5),
+    Column("run_after", DateTime(timezone=True), nullable=False),
+    Column("locked_by", String(128)),
+    Column("locked_until", DateTime(timezone=True)),
+    Column("idempotency_key", String(128), unique=True),
+    Column("last_error", Text),
+    Column("created_at", DateTime(timezone=True), nullable=False),
+    Column("updated_at", DateTime(timezone=True), nullable=False),
+)
+
+verification_challenge = Table(
+    "verification_challenge", md,
+    Column("request_id", String(64), primary_key=True),
+    Column("channel", String(16), nullable=False),
+    Column("code_hash", String(64), nullable=False),          # HMAC of the OTP, never the OTP itself
+    Column("expires_at", DateTime(timezone=True), nullable=False),
+    Column("attempts", Integer, nullable=False, default=0),
+    Column("status", String(16), nullable=False),             # pending | verified | locked | expired
+)
+
+access_grant = Table(
+    "access_grant", md,
+    Column("grant_id", String(64), primary_key=True),
+    Column("sealed_id", String(80), nullable=False),          # hold_<pid> / escrow_<pid>
+    Column("requested_by", String(128), nullable=False),
+    Column("approved_by", String(128)),
+    Column("reason", Text, nullable=False),
+    Column("ticket_ref", String(128), nullable=False),
+    Column("status", String(16), nullable=False),             # pending | active | revoked | expired
+    Column("created_at", DateTime(timezone=True), nullable=False),
+    Column("expires_at", DateTime(timezone=True)),
+)
+
+access_log = Table(
+    "access_log", md,
+    Column("log_id", String(64), primary_key=True),
+    Column("grant_id", String(64), index=True),
+    Column("actor", String(128), nullable=False),
+    Column("token", String(64)),
+    Column("outcome", String(16), nullable=False),            # allowed | denied
+    Column("detail", Text),
+    Column("at", DateTime(timezone=True), nullable=False),
 )
 
 
@@ -380,12 +439,30 @@ class LineageStore:
         return [r[0] for r in rows if r[0]]
 
     # ---- erasure bookkeeping --------------------------------------------
-    def add_request(self, r: ErasureRequest) -> None:
+    def add_request(self, r: ErasureRequest, idempotency_key: str | None = None,
+                    requested_by: str | None = None) -> None:
         with self.engine.begin() as c:
             c.execute(erasure_request.insert().values(
                 request_id=r.request_id, principal_id=r.principal_id, scope=r.scope,
                 requested_via=r.requested_via, status=r.status, dry_run=r.dry_run,
-                received_at=r.received_at, due_by=r.due_by))
+                received_at=r.received_at, due_by=r.due_by, idempotency_key=idempotency_key,
+                requested_by=requested_by))
+
+    def request_by_idempotency_key(self, key: str) -> dict | None:
+        with self.engine.connect() as c:
+            r = c.execute(select(erasure_request).where(erasure_request.c.idempotency_key == key)).first()
+        return dict(r._mapping) if r else None
+
+    def mark_request_verified(self, request_id: str, method: str, evidence: str | None = None) -> None:
+        with self.engine.begin() as c:
+            c.execute(update(erasure_request).where(erasure_request.c.request_id == request_id).values(
+                verification_method=method, verification_evidence=evidence, verified_at=utcnow()))
+
+    def open_requests(self) -> list[dict]:
+        done = ("completed", "completed_with_exceptions", "failed", "planned", "rejected")
+        with self.engine.connect() as c:
+            rows = c.execute(select(erasure_request).where(erasure_request.c.status.not_in(done))).all()
+        return [dict(r._mapping) for r in rows]
 
     def set_request_status(self, request_id: str, status: str) -> None:
         vals: dict[str, Any] = {"status": status}
@@ -416,10 +493,13 @@ class LineageStore:
             r = c.execute(select(erasure_certificate.c.sha256).order_by(erasure_certificate.c.seq.desc())).first()
         return r[0] if r else None
 
-    def add_certificate(self, request_id: str, payload: str, sha: str, prev: str | None) -> None:
+    def add_certificate(self, request_id: str, payload: str, sha: str, prev: str | None,
+                        signature: str | None = None, signer: str | None = None,
+                        archive_uri: str | None = None) -> None:
         with self.engine.begin() as c:
             c.execute(erasure_certificate.insert().values(request_id=request_id, payload=payload, sha256=sha,
-                                                          prev_sha256=prev, issued_at=utcnow()))
+                                                          prev_sha256=prev, issued_at=utcnow(), signature=signature,
+                                                          signer=signer, archive_uri=archive_uri))
 
     def get_certificate(self, request_id: str) -> dict | None:
         with self.engine.connect() as c:

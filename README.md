@@ -32,7 +32,9 @@ Consent, meanwhile, was recorded once against the *customer*. Consent applies pe
 | **Data lineage graph** | Every artifact the agent creates is linked to the data elements it contains and the artifacts it was derived from, with typed edges: `copy`, `embed`, `transform`, `aggregate`, `train`. |
 | **Erasure orchestration** | On withdrawal or erasure request: discover copies (including ones nobody registered), decide per artifact (delete, redact, regenerate, crypto-shred, retain under legal hold, flag model for retraining), execute through native connectors. |
 | **Verification and evidence** | Every store is re-checked for tokens and raw values. A hash-chained erasure certificate records every action, exception and legal basis for the DPO or the Data Protection Board. |
-| **Retention-aware** | Legal holds (e.g. KYC record keeping) and the DPDP Rules' one-year minimum retention are handled with sealed keys usable only through privileged access, purged automatically when the period ends. |
+| **Retention-aware** | Legal holds (e.g. KYC record keeping) and the DPDP Rules' one-year minimum retention are handled with sealed keys usable only through audited break-glass access, purged automatically when the period ends. |
+| **Production security** | Authenticated, role-based Rights API (API keys, OIDC); requester verification before anything is erased; durable job queue with resume; KMS-signed certificates in immutable storage; tenant isolation; production guardrails. See [docs/security.md](docs/security.md). |
+| **Observability without leaks** | OpenTelemetry spans tagged with the pseudonymous principal and tokenised before export; erasure metrics and SLA alerts; collector configs for X-Ray/CloudWatch and Cloud Trace. See [docs/observability.md](docs/observability.md). |
 
 Erasure becomes tractable because no store ever holds a raw identifier. Destroying one person's key makes every copy unreadable, including copies in immutable logs and backups. Lineage tells you which derived artifacts (summaries, audiences, eval rows, fine-tuned models) also need action.
 
@@ -117,11 +119,12 @@ with dpdp.context(pid, purpose="policy_issuance", session_id=sid):
 
 | Config | Models | PII detection | Vault | Native stores covered |
 |---|---|---|---|---|
-| `config/dpdp.aws.yaml` | Bedrock Converse (+ Guardrails) | regex + Comprehend / Guardrails | KMS + DynamoDB | AgentCore Memory, CloudWatch (incl. `aws/spans`, Bedrock invocation logs), Bedrock KB, S3, DynamoDB, Aurora pgvector |
-| `config/dpdp.gcp.yaml` | Vertex AI Gemini | regex + Cloud DLP | Cloud KMS + Firestore | Memory Bank, Cloud Logging, Vector Search, BigQuery, GCS |
+| `config/dpdp.aws.yaml` | Bedrock Converse (+ Guardrails) | regex + Comprehend / Guardrails | KMS + DynamoDB | AgentCore Memory + Identity, CloudWatch (incl. `aws/spans`, Bedrock invocation logs), X-Ray, Bedrock KB, S3, DynamoDB, Aurora pgvector |
+| `config/dpdp.gcp.yaml` | Vertex AI Gemini | regex + Cloud DLP | Cloud KMS + Firestore | Agent Engine Sessions + Memory Bank, Cloud Logging, Cloud Trace, Vector Search, BigQuery, GCS |
 | `config/dpdp.openai.yaml` | OpenAI Responses API (`store=false`) | regex (+ either cloud) | local or KMS | OpenAI stored responses/files, Redis, SQL |
 | `config/dpdp.anthropic.yaml` | Claude via Anthropic SDK: API direct, `AnthropicBedrock` or `AnthropicVertex` (`platform:`) | regex (+ either cloud) | local or KMS | Anthropic Files API uploads, SQL |
 | `config/dpdp.local.yaml` | offline echo model | regex | local | SQLite, JSONL, log files |
+| `config/dpdp.production.aws.yaml` / `.gcp.yaml` | production references with auth, verification, signing, sealed KEK, OTel | | | |
 
 Mix and match freely, for example OpenAI models with AWS stores, or Claude on Bedrock with AgentCore Memory. Claude has no embeddings endpoint, so set `embedding_provider` (openai, bedrock or vertex) for vectors.
 
@@ -132,22 +135,43 @@ pip install -e ".[openai]"      # OpenAI API
 pip install -e ".[anthropic]"   # Claude API direct, or Claude on Bedrock / Vertex
 pip install -e ".[aws]"         # Bedrock, AgentCore, CloudWatch, KMS, DynamoDB, S3
 pip install -e ".[gcp]"         # Vertex AI, Cloud KMS, Firestore, Logging, BigQuery, DLP
+pip install -e ".[otel,auth]"   # OpenTelemetry export, OIDC JWT verification
 pip install -e ".[all]"         # everything, plus Redis, PostgreSQL and the API server
 ```
 
 ## Rights API and CLI
 
+Requests are authenticated, verified, queued and then processed by workers:
+
 ```bash
-dpdp-rights -c config/dpdp.local.yaml serve --port 8080
-curl -XPOST localhost:8080/v1/consents/withdraw -H 'content-type: application/json' \
-     -d '{"external_id":"app-1003","purpose_id":"marketing"}'
-curl -XPOST localhost:8080/v1/erasure-requests -H 'content-type: application/json' \
-     -d '{"external_id":"app-1001","dry_run":true}'
-curl localhost:8080/v1/erasure-requests/<id>/certificate
+dpdp-rights -c config/dpdp.local.yaml serve --port 8080     # API
+dpdp-rights -c config/dpdp.local.yaml worker                # processes verified requests
+
+# 1. a backend (role: service) submits a withdrawal; an OTP goes to the applicant's registered contact
+curl -XPOST localhost:8080/v1/withdrawals -H "x-api-key: $KEY" -H 'Idempotency-Key: 7f3a' \
+     -H 'content-type: application/json' -d '{"external_id":"app-1003","purpose_id":"marketing"}'
+# 2. the applicant confirms with the code
+curl -XPOST localhost:8080/v1/erasure-requests/<id>/verify -H "x-api-key: $KEY" \
+     -H 'content-type: application/json' -d '{"code":"482913"}'
+# 3. a DPO checks the signed certificate
+curl localhost:8080/v1/erasure-requests/<id>/certificate/verify -H "authorization: Bearer $DPO_JWT"
 ```
 
-Other CLI commands: `erase`, `lineage`, `certificate`, `connectors`, and `purge-escrows`
-(schedule this daily with EventBridge Scheduler or Cloud Scheduler).
+A principal signed in through OIDC can submit for themselves (verified by their session), and a DPO
+can attest identity verified out of band. CLI: `erase`, `lineage`, `certificate`, `verify-certificate`,
+`worker`, `sla`, `check-config`, `hash-api-key`, `connectors`, `purge-escrows`.
+
+## Production deployment
+
+1. Start from `config/dpdp.production.aws.yaml` or `config/dpdp.production.gcp.yaml`
+   (`environment: production` turns on guardrails that refuse unsafe settings).
+2. Apply `deploy/terraform/aws` or `deploy/terraform/gcp`: vault keys and storage, a separate sealed KEK
+   with a break-glass role, a certificate signing key, an immutable certificate bucket, IAM.
+3. Run the API behind your gateway/WAF, and `dpdp-rights worker` as a service or scheduled job.
+4. Run the OpenTelemetry collector from `deploy/otel/`, and alert on overdue requests.
+5. `dpdp-rights -c <config> check-config` in CI; schedule `purge-escrows` daily.
+
+Details: [docs/security.md](docs/security.md), [docs/observability.md](docs/observability.md).
 
 ## Repository layout
 
@@ -160,11 +184,15 @@ src/dpdp_rights/
   lineage/       control-plane store + graph traversal
   providers/     OpenAI, Anthropic (direct/Bedrock/Vertex), Bedrock Converse, Vertex, echo
   connectors/    local, AWS, GCP, OpenAI platform, Anthropic platform
-  erasure/       policy engine + orchestrator (+ certificates, escrow purge)
+  erasure/       policy engine + orchestrator (+ certificates, escrow purge, resume)
+  security/      auth, requester verification, signing + archive, break-glass, guardrails, tenancy
+  jobs/          durable job queue
+  observability/ OpenTelemetry spans, metrics, tokenising exporter
   integrations/  AgentCore Memory/Runtime helpers
   api/ cli.py    FastAPI rights API, CLI
 config/          ready-to-edit configs per cloud / provider
-deploy/terraform AWS + GCP infra for vault, keys, IAM, log protection
+deploy/terraform AWS + GCP infra: vault, keys, sealed KEK + break-glass, signing key, immutable bucket, IAM
+deploy/otel      OpenTelemetry collector configs (AWS X-Ray/CloudWatch, GCP Cloud Trace)
 docs/            architecture, lineage data model, DPDP mapping, connectors
 examples/        insurance onboarding demo, AgentCore agent, OpenAI direct
 ```
@@ -175,14 +203,18 @@ examples/        insurance onboarding demo, AgentCore agent, OpenAI direct
 - [Lineage data model (ERD, SQL, recursive CTE)](docs/lineage-data-model.md)
 - [DPDP mapping](docs/dpdp-mapping.md)
 - [Connectors and writing your own](docs/connectors.md)
+- [Security and production hardening](docs/security.md)
+- [Observability (OpenTelemetry)](docs/observability.md)
 
 ## Roadmap
 
 - Inactivity-based erasure with 48-hour notices (Rules r.8(1)-(2), Third Schedule platforms)
 - Sealed-archive connector (S3 Object Lock / GCS Bucket Lock) for record-level statutory retention
 - Consent Manager (Rule 4) webhook adapter
-- Azure (Azure OpenAI, Monitor, AI Search) connectors
-- OpenTelemetry span processor that tokenises attributes in-process
+- Azure (Azure OpenAI, Monitor, AI Search, Key Vault) connectors
+- LangSmith and Datadog LLM Observability connectors
+- DPO console UI
+- Independent security review
 - Neptune / Spanner Graph lineage backends for very large graphs
 
 ## License

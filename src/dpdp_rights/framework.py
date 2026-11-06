@@ -16,6 +16,7 @@ from __future__ import annotations
 import logging
 from contextlib import contextmanager
 from dataclasses import dataclass, field
+from datetime import timedelta
 from typing import Iterable, Iterator
 
 from .connectors.base import Connector, build_connectors
@@ -23,14 +24,20 @@ from .consent.ledger import ConsentDenied, ConsentLedger
 from .core import context as ctxmod
 from .core.config import FrameworkConfig
 from .core.context import ContextEnvelope
-from .core.models import Artifact, DataElement, EdgeType, Purpose, new_id
+from .core.models import Artifact, DataElement, EdgeType, ErasureRequest, Purpose, RequestStatus, new_id, utcnow
 from .erasure.orchestrator import Orchestrator
 from .erasure.policy import PolicyEngine
+from .jobs.queue import JobQueue
 from .lineage.store import LineageStore
+from .observability.telemetry import Telemetry
 from .pii.detectors import build_detector
 from .pii.tokenizer import TokenizedText, Tokenizer
 from .providers.base import LLMProvider, build_provider
-from .vault.keys import build_key_wrapper
+from .security.breakglass import BreakGlass
+from .security.guardrails import enforce as enforce_guardrails
+from .security.signing import build_archive, build_signer
+from .security.verification import VerificationError, VerificationService, build_notifier
+from .vault.keys import build_key_wrapper, build_sealed_key_wrapper
 from .vault.storage import build_storage
 from .vault.vault import TOKEN_RE, Vault
 
@@ -61,14 +68,28 @@ class DataRightsFramework:
     def __init__(self, config: FrameworkConfig, provider: LLMProvider | None = None,
                  connectors: dict[str, Connector] | None = None):
         self.config = config
+        self.warnings = enforce_guardrails(config)      # raises in production on unsafe settings
+        for w in self.warnings:
+            logging.getLogger("dpdp_rights").warning("production guardrail: %s", w)
         self.store = LineageStore(config.lineage.url)
-        self.vault = Vault(build_storage(config.vault, config.lineage.url), build_key_wrapper(config.vault))
+        v = config.vault
+        self.vault = Vault(build_storage(v, config.lineage.url), build_key_wrapper(v),
+                           sealed_wrapper=build_sealed_key_wrapper(v), cache_ttl_seconds=v.cache_ttl_seconds,
+                           cache_max_entries=v.cache_max_entries)
         self.tokenizer = Tokenizer(build_detector(config.pii), self.vault)
         self.ledger = ConsentLedger(self.store)
         self.provider = provider or build_provider(config.provider)
         self.connectors = connectors if connectors is not None else build_connectors(config.connectors)
+        self.telemetry = Telemetry(config.observability.otel)
         self.orchestrator = Orchestrator(self.store, self.vault, self.connectors,
-                                         PolicyEngine(config.policy), self.provider, config.policy.sla_days)
+                                         PolicyEngine(config.policy), self.provider, config.policy.sla_days,
+                                         signer=build_signer(config.certificates),
+                                         archive=build_archive(config.certificates), telemetry=self.telemetry)
+        self.verification = VerificationService(self.store, self.vault, config.verification,
+                                                build_notifier(config.verification))
+        self.break_glass = BreakGlass(self.store, self.vault, config.break_glass)
+        q = config.queue
+        self.queue = JobQueue(self.store, q.lease_seconds, q.max_attempts, q.backoff_seconds)
         for p in config.purposes:
             self.store.put_purpose(Purpose(p.id, p.description, p.legal_basis, p.retention_days, p.legal_hold_basis))
 
@@ -92,6 +113,7 @@ class DataRightsFramework:
 
     def withdraw_consent(self, principal_id: str, purpose_id: str, erase: bool = True) -> dict:
         n = self.ledger.withdraw(principal_id, purpose_id)
+        self.telemetry.withdrawals.add(n, {"purpose": purpose_id})
         out = {"withdrawn": n}
         if erase:
             out["erasure"] = self.erase(principal_id, scope=f"purpose:{purpose_id}")
@@ -112,9 +134,12 @@ class DataRightsFramework:
         env = ctxmod.require()
         tt = self.tokenizer.tokenize(text, env.principal_id)
         types = {m.entity.type for m in tt.mentions}
+        for t in types:
+            self.telemetry.pii.add(sum(1 for m in tt.mentions if m.entity.type == t), {"type": t})
         if (self.config.enforce_consent if enforce_consent is None else enforce_consent):
             d = self.ledger.check(env.principal_id, env.purpose_id, types)
             if not d.allowed:
+                self.telemetry.blocked.add(1, {"purpose": env.purpose_id})
                 raise ConsentDenied(f"No consent for purpose '{env.purpose_id}' on {d.missing_element_types} "
                                     f"(basis={d.basis})")
         element_ids = [self._element(env.principal_id, "FREE_TEXT", None)]
@@ -169,7 +194,14 @@ class DataRightsFramework:
     def generate(self, prompt: str, system: str | None = None, *, provider_store: str = "openai_platform",
                  already_protected: bool = False, **kw) -> GuardedResponse:
         prot = Protected(prompt, [], set()) if already_protected else self.protect(prompt)
-        res = self.provider.generate(prot.text, system=system, **kw)
+        with self.telemetry.span("gen_ai.generate", **{
+                "gen_ai.system": getattr(self.provider, "name", "unknown"),
+                "gen_ai.request.model": getattr(self.provider, "model", None)}) as sp:
+            res = self.provider.generate(prot.text, system=system, **kw)
+            for k_in, k_out in (("input_tokens", "gen_ai.usage.input_tokens"),
+                                ("output_tokens", "gen_ai.usage.output_tokens")):
+                if isinstance(res.usage.get(k_in), int):
+                    sp.set_attribute(k_out, res.usage[k_in])
         arts = []
         if res.provider_ref:
             a = self.track_artifact("provider_response", provider_store, res.provider_ref,
@@ -195,7 +227,12 @@ class DataRightsFramework:
                     msg = dpdp.tokenizer.tokenize(msg, env.principal_id).text
                     record.dpdp_principal = env.principal_id
                     record.dpdp_purpose = env.purpose_id
-                else:
+                else:   # no principal known: mask rather than let raw PII through
+                    out, cur = [], 0
+                    for e in dpdp.tokenizer.detector.detect(msg):
+                        out += [msg[cur:e.start], f"[{e.type}]"]
+                        cur = e.end
+                    msg = "".join(out) + msg[cur:]
                     record.dpdp_principal = "-"
                     record.dpdp_purpose = "-"
                 record.msg, record.args = msg, ()
@@ -211,6 +248,127 @@ class DataRightsFramework:
 
     def purge_due_escrows(self) -> list[dict]:
         return self.orchestrator.purge_due_escrows()
+
+    # ---- verified, durable request intake (used by the Rights API) -----------
+    def submit_request(self, principal_id: str, *, scope: str = "full", withdraw_purpose: str | None = None,
+                       verification: str = "otp", evidence: str | None = None, requested_by: str | None = None,
+                       requested_via: str = "api", idempotency_key: str | None = None, dry_run: bool = False) -> dict:
+        """Create an erasure / withdrawal request.
+
+        verification: "otp" (code sent to the principal's registered contact), "authenticated_session"
+        (caller authenticated as this principal), "dpo_attested" (needs ``evidence``) or "none"
+        (only if verification.required is false). Processing happens on the job queue after verification.
+        """
+        if idempotency_key:
+            prev = self.store.request_by_idempotency_key(idempotency_key)
+            if prev:
+                return {"request_id": prev["request_id"], "status": prev["status"], "duplicate": True}
+        if self.store.get_principal(principal_id) is None:
+            raise KeyError("unknown data principal")
+        if withdraw_purpose:
+            scope = f"purpose:{withdraw_purpose}"
+            requested_via = f"{requested_via}-withdrawal"
+        req = ErasureRequest(new_id("er"), principal_id, scope, requested_via, dry_run=dry_run,
+                             due_by=utcnow() + timedelta(days=self.config.policy.sla_days))
+        if verification == "none" and self.config.verification.required and not dry_run:
+            raise VerificationError("verification is required for erasure requests")
+        if verification == "dpo_attested" and not (evidence or "").strip():
+            raise VerificationError("dpo_attested verification needs an evidence reference")
+        pending = verification == "otp" and not dry_run
+        req.status = "pending_verification" if pending else RequestStatus.RECEIVED.value
+        self.store.add_request(req, idempotency_key, requested_by)
+        payload = {"request_id": req.request_id, "withdraw_purpose": withdraw_purpose}
+        out = {"request_id": req.request_id, "status": req.status, "due_by": req.due_by.isoformat()}
+        if pending:
+            try:
+                out["verification"] = self.verification.start(req.request_id, principal_id)
+            except VerificationError:
+                self.store.set_request_status(req.request_id, "rejected")
+                raise
+        else:
+            self.store.mark_request_verified(req.request_id, verification, evidence)
+            out["job_id"] = self.queue.enqueue("erasure", payload, idempotency_key=f"erasure:{req.request_id}")
+        return out
+
+    def confirm_request(self, request_id: str, code: str, withdraw_purpose: str | None = None) -> dict:
+        r = self.store.get_request(request_id)
+        if not r or r["status"] != "pending_verification":
+            raise VerificationError("request is not awaiting verification")
+        if not self.verification.verify(request_id, code):
+            raise VerificationError("incorrect code")
+        self.store.mark_request_verified(request_id, "otp")
+        self.store.set_request_status(request_id, RequestStatus.RECEIVED.value)
+        wp = withdraw_purpose or (r["scope"].split(":", 1)[1] if r["scope"].startswith("purpose:")
+                                  and r["requested_via"].endswith("withdrawal") else None)
+        job_id = self.queue.enqueue("erasure", {"request_id": request_id, "withdraw_purpose": wp},
+                                    idempotency_key=f"erasure:{request_id}")
+        return {"request_id": request_id, "status": "received", "job_id": job_id}
+
+    def process_jobs(self, max_jobs: int | None = None) -> list[dict]:
+        """Run queued jobs until the queue is empty (or max_jobs). Used by `dpdp-rights worker`."""
+        done = []
+        while max_jobs is None or len(done) < max_jobs:
+            j = self.queue.claim()
+            if j is None:
+                break
+            try:
+                result = self._run_job(j)
+                self.queue.complete(j["job_id"])
+                done.append({"job_id": j["job_id"], "kind": j["kind"], "ok": True, "result": result})
+            except Exception as e:  # noqa: BLE001
+                state = self.queue.fail(j["job_id"], repr(e))
+                if state == "failed" and j["kind"] == "erasure":
+                    self.store.set_request_status(j["payload"]["request_id"], RequestStatus.FAILED.value)
+                done.append({"job_id": j["job_id"], "kind": j["kind"], "ok": False, "state": state, "error": str(e)})
+        return done
+
+    def _run_job(self, j: dict):
+        p = j["payload"]
+        if j["kind"] == "erasure":
+            r = self.store.get_request(p["request_id"])
+            if p.get("withdraw_purpose"):
+                self.withdraw_consent(r["principal_id"], p["withdraw_purpose"], erase=False)
+            req = ErasureRequest(r["request_id"], r["principal_id"], r["scope"], r["requested_via"] or "api",
+                                 status=r["status"], received_at=r["received_at"], due_by=r["due_by"],
+                                 dry_run=bool(r["dry_run"]))
+            res = self.orchestrator.run(req, raise_errors=True)
+            return {"status": res.get("status"), "certificate_sha256": res.get("certificate_sha256")}
+        if j["kind"] == "purge_escrows":
+            return self.purge_due_escrows()
+        raise ValueError(f"unknown job kind {j['kind']}")
+
+    def sla_counts(self, due_soon_days: int = 7) -> dict[str, int]:
+        now = utcnow()
+        out = {"ok": 0, "due_soon": 0, "overdue": 0}
+        for r in self.store.open_requests():
+            due = r["due_by"]
+            if due is None:
+                continue
+            due = due if due.tzinfo else due.replace(tzinfo=now.tzinfo)
+            days = (due - now).total_seconds() / 86400
+            out["overdue" if days < 0 else "due_soon" if days <= due_soon_days else "ok"] += 1
+        return out
+
+    def verify_certificate(self, request_id: str) -> dict:
+        """Recompute the hash, check the chain link and the signature."""
+        import hashlib
+        import json as _json
+
+        from .security.signing import unb64
+
+        c = self.store.get_certificate(request_id)
+        if not c:
+            raise KeyError("no certificate")
+        digest = hashlib.sha256(c["payload"].encode()).digest()
+        body = _json.loads(c["payload"])
+        out = {"request_id": request_id, "sha256": c["sha256"],
+               "hash_ok": digest.hex() == c["sha256"],
+               "chain_ok": body.get("prev_certificate_sha256") == c["prev_sha256"],
+               "signed": bool(c["signature"]), "signer": c["signer"], "archive_uri": c["archive_uri"]}
+        signer = self.orchestrator.signer
+        out["signature_ok"] = (signer.verify(digest, unb64(c["signature"]))
+                               if c["signature"] and signer is not None else None)
+        return out
 
     def lineage(self, principal_id: str) -> list[dict]:
         return [{"artifact_id": e["artifact"].artifact_id, "kind": e["artifact"].kind,

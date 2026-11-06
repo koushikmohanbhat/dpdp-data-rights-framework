@@ -17,6 +17,24 @@
 | `gcp_vertex_memory_bank` | Agent Engine Memory Bank (v1beta1) | memories:retrieve by scope | delete memory | re-discovery empty |
 | `openai_platform` | Stored responses, conversations, files, vector-store files | via lineage | delete | API confirmation |
 | `anthropic_platform` | Anthropic Files API uploads (Messages API is stateless) | via lineage | delete | API confirmation |
+| `aws_xray` | AWS X-Ray traces | `GetTraceSummaries` on the `dpdp_principal` annotation | crypto_shred (traces are immutable) | scans segments for raw values |
+| `gcp_cloud_trace` | Google Cloud Trace | `list_traces` on the `dpdp.principal` label | crypto_shred (spans are immutable) | scans span labels for raw values |
+| `langfuse` | Langfuse LLM traces | traces by `userId` | delete | re-discovery empty |
+| `gcp_agent_engine_sessions` | Vertex AI Agent Engine Sessions (v1beta1) | sessions by `user_id` | delete session | re-discovery empty |
+| `aws_agentcore_identity` | AgentCore Identity token vault (per-user OAuth tokens) | one per principal | revoke at IdP: Cognito `AdminUserGlobalSignOut` or webhook (no per-user delete API exists) | IdP confirmation |
+
+## Agent platforms: AgentCore and Vertex AI Agent Engine
+
+| Capability | Amazon Bedrock AgentCore | Vertex AI Agent Engine | Connector coverage |
+|---|---|---|---|
+| Short-term memory / sessions | Memory events | Sessions | `aws_agentcore_memory`, `gcp_agent_engine_sessions` |
+| Long-term memory | Memory records | Memory Bank | `aws_agentcore_memory`, `gcp_vertex_memory_bank` |
+| Traces and logs | Observability (`aws/spans`, runtime logs) | Cloud Trace, Cloud Logging | `aws_cloudwatch_logs`, `aws_xray`, `gcp_cloud_trace`, `gcp_cloud_logging` |
+| Per-user credentials | Identity token vault | (your IdP) | `aws_agentcore_identity` |
+| Runtime | Runtime helper (`envelope_from_agentcore_payload`) | context via headers / payload | `integrations.agentcore` |
+
+Use the pseudonymous principal id as AgentCore `actorId` / Identity `userId` and as Agent Engine
+`user_id`, so platform data is findable per person but never keyed by a real identifier.
 
 ## AgentCore conventions
 

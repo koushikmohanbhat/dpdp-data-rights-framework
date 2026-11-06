@@ -114,7 +114,7 @@ class Connector(ABC):
 
 def build_connectors(configs) -> dict[str, Connector]:
     # import side-effect registers built-ins
-    from . import anthropic_platform, aws, gcp, local, openai_platform  # noqa: F401
+    from . import agents, anthropic_platform, aws, gcp, local, observability, openai_platform  # noqa: F401
 
     out = {}
     for c in configs:

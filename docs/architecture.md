@@ -123,8 +123,27 @@ Erasure gets cheap when no store ever holds a raw identifier:
 | Vault keys | KMS (encryption context = principal) | Cloud KMS (AAD = principal) | local / either KMS | local / either KMS |
 | Vault storage | DynamoDB | Firestore | SQL | SQL |
 | Lineage DB | Aurora / RDS PostgreSQL | Cloud SQL / AlloyDB | any SQLAlchemy DB | any SQLAlchemy DB |
-| Agent memory | AgentCore Memory (events + records) | Agent Engine Memory Bank | - | - |
-| Observability | CloudWatch Logs, AgentCore spans (`aws/spans`), Bedrock invocation logs | Cloud Logging | - | - |
+| Agent memory | AgentCore Memory (events + records), Identity token vault | Agent Engine Sessions + Memory Bank | - | - |
+| Observability | CloudWatch Logs, AgentCore spans (`aws/spans`), Bedrock invocation logs, X-Ray | Cloud Logging, Cloud Trace | Langfuse | Langfuse |
 | Retrieval | Bedrock Knowledge Bases, pgvector | Vertex Vector Search | vector stores | bring your own (Claude has no embeddings API) |
 | Datasets | S3 (all versions purged) | GCS | Files API | Files API (deleted by connector) |
 | Scheduling | EventBridge Scheduler -> Lambda/ECS | Cloud Scheduler -> Cloud Run job | cron | cron |
+
+## Production architecture
+
+```mermaid
+flowchart LR
+  U["Data Principal / DPO"] -->|OIDC or API key| GW["API gateway + WAF"]
+  GW --> API["Rights API<br/>auth, roles, tenant"]
+  API -->|OTP| N["SNS / SES / webhook"]
+  API --> Q[("Job queue<br/>(control-plane DB)")]
+  W["Workers<br/>dpdp-rights worker"] --> Q
+  W --> C["Connectors"]
+  W --> V[("Vault<br/>separate account")]
+  W --> S["Signer<br/>KMS asymmetric key"]
+  S --> A[("Immutable archive<br/>S3 Object Lock / GCS lock")]
+  BG["Break-glass role<br/>MFA + approver"] -.->|Decrypt sealed KEK| V
+  API & W -->|OTLP, tokenised| OC["ADOT / OTel Collector"] --> O["X-Ray + CloudWatch<br/>or Cloud Trace + Monitoring"]
+```
+
+See [security.md](security.md) and [observability.md](observability.md).

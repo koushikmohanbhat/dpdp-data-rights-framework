@@ -4,6 +4,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
+import time
 from datetime import timedelta
 from typing import Callable
 
@@ -47,8 +48,13 @@ REGEN_SYSTEM = (
 
 class Orchestrator:
     def __init__(self, store: LineageStore, vault: Vault, connectors: dict[str, Connector],
-                 policy: PolicyEngine, provider: LLMProvider | None = None, sla_days: int = 30):
+                 policy: PolicyEngine, provider: LLMProvider | None = None, sla_days: int = 30,
+                 signer=None, archive=None, telemetry=None):
+        from ..observability.telemetry import Telemetry
+
         self.store, self.vault, self.connectors, self.policy = store, vault, connectors, policy
+        self.signer, self.archive = signer, archive
+        self.telemetry = telemetry or Telemetry(False)
         self.retention = policy.cfg.statutory_retention
         self.provider = provider
         self.sla_days = sla_days
@@ -66,16 +72,39 @@ class Orchestrator:
         self.store.add_request(req)
         return req
 
-    def run(self, req: ErasureRequest) -> dict:
+    def run(self, req: ErasureRequest, raise_errors: bool = False) -> dict:
+        """Execute a request. Safe to call again after a crash: completed actions are skipped,
+        the vault is not shredded twice, and a finished request returns its certificate."""
+        with self.telemetry.span("dpdp.erasure", **{"dpdp.request_id": req.request_id, "dpdp.scope": req.scope,
+                                                    "dpdp.principal": req.principal_id,
+                                                    "dpdp.dry_run": req.dry_run}) as sp:
+            t0 = time.monotonic()
+            out = self._run(req, raise_errors)
+            sp.set_attribute("dpdp.status", out.get("status", "unknown"))
+            self.telemetry.requests.add(1, {"status": out.get("status", "unknown"), "scope": req.scope.split(":")[0]})
+            if not req.dry_run:
+                self.telemetry.duration.record(time.monotonic() - t0, {"scope": req.scope.split(":")[0]})
+            return out
+
+    def _run(self, req: ErasureRequest, raise_errors: bool) -> dict:
         pid = req.principal_id
+        existing = self.store.get_request(req.request_id) or {}
+        if str(existing.get("status", "")).startswith("completed"):
+            cert = self.store.get_certificate(req.request_id)
+            if cert:
+                return json.loads(cert["payload"]) | {"certificate_sha256": cert["sha256"], "already_completed": True}
         if self.store.get_principal(pid) is None:
             self.store.set_request_status(req.request_id, RequestStatus.FAILED.value)
             return {"request_id": req.request_id, "status": "failed", "error": "unknown principal"}
         full = req.scope == "full"
         if not req.dry_run and full:
             self.store.set_principal_status(pid, PrincipalStatus.ERASURE_PENDING)
+        prior = [] if req.dry_run else self.store.actions_for(req.request_id)
+        prior_shred = next((a for a in prior if a["artifact_id"] == "vault" and a["action"] == "crypto_shred"), None)
 
         ctx = ErasureContext(pid, self.vault.tokens_for(pid), self.vault.snapshot_values(pid), req.dry_run)
+        if prior_shred:   # resumed after the key was destroyed: recover the token list from lineage
+            ctx.tokens = sorted({e.token for e in self.store.elements_for(pid) if e.token})
         try:
             plan = self.plan(ctx, req.scope)
             self.store.set_request_status(req.request_id, RequestStatus.PLANNED.value)
@@ -89,8 +118,8 @@ class Orchestrator:
             self.store.set_request_status(req.request_id, RequestStatus.EXECUTING.value)
             results = self.execute(req, plan, ctx)
 
-            shred = None
-            if full:
+            shred = (prior_shred or {}).get("detail")
+            if full and not prior_shred:
                 hold_tokens = set()
                 for p in plan:
                     if p.action == Action.RETAIN_LEGAL_HOLD:
@@ -112,11 +141,15 @@ class Orchestrator:
             if full:
                 self.store.set_principal_status(pid, PrincipalStatus.ERASED)
             summary = self._summary(req, plan, results, verification, shred, status=status.value)
+            if prior:
+                summary["resumed"] = True
             self._certify(req, summary)
             self.store.set_request_status(req.request_id, status.value)
             return summary
         except Exception as e:  # noqa: BLE001
             log.exception("erasure failed")
+            if raise_errors:         # let the job queue retry; the run resumes where it stopped
+                raise
             self.store.set_request_status(req.request_id, RequestStatus.FAILED.value)
             return {"request_id": req.request_id, "status": "failed", "error": str(e)}
         finally:
@@ -171,8 +204,11 @@ class Orchestrator:
 
     def execute(self, req: ErasureRequest, plan: list[PlannedAction], ctx: ErasureContext) -> list[ActionResult]:
         results = []
+        done = {a["artifact_id"] for a in self.store.actions_for(req.request_id) if a["ok"]}
         for p in plan:
             a = p.artifact
+            if a.artifact_id in done:        # resumed run: already handled
+                continue
             conn = self.connectors.get(a.store)
             try:
                 if p.action in (Action.RETAIN_LEGAL_HOLD, Action.FLAG_RETRAIN, Action.SKIP):
@@ -192,6 +228,7 @@ class Orchestrator:
                 res = ActionResult(a.artifact_id, a.store, p.action.value, False, {"error": str(e)})
             res.detail.setdefault("reason", p.reason)
             res.detail.setdefault("kind", a.kind)
+            self.telemetry.actions.add(1, {"action": res.action, "store": a.store, "ok": res.ok})
             if res.ok:
                 done = Action(res.action) if res.action in Action._value2member_map_ else p.action
                 self.store.set_artifact_status(a.artifact_id, _STATUS_AFTER.get(done, ArtifactStatus.ERASED).value)
@@ -311,6 +348,18 @@ class Orchestrator:
         body = {k: v for k, v in summary.items() if k != "plan"}
         body["prev_certificate_sha256"] = prev
         payload = json.dumps(body, sort_keys=True, default=str)
-        sha = hashlib.sha256(payload.encode()).hexdigest()
-        self.store.add_certificate(req.request_id, payload, sha, prev)
+        digest = hashlib.sha256(payload.encode()).digest()
+        sha = digest.hex()
+        signature = signer_id = archive_uri = None
+        if self.signer is not None:
+            from ..security.signing import b64
+
+            signature, signer_id = b64(self.signer.sign(digest)), self.signer.key_id
+        if self.archive is not None:
+            doc = json.dumps({"payload": json.loads(payload), "sha256": sha, "signature": signature,
+                              "signer": signer_id}, sort_keys=True, default=str).encode()
+            archive_uri = self.archive.put(f"{req.request_id}.json", doc)
+        self.store.add_certificate(req.request_id, payload, sha, prev, signature, signer_id, archive_uri)
         summary["certificate_sha256"] = sha
+        summary["certificate_signature"] = signature
+        summary["certificate_archive"] = archive_uri

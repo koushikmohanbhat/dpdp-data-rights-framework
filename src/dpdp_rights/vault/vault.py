@@ -18,6 +18,8 @@ import os
 import re
 import secrets
 import threading
+import time
+from collections import OrderedDict
 
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 
@@ -45,28 +47,58 @@ def normalise(element_type: str, value: str) -> str:
 
 
 class Vault:
-    def __init__(self, storage: VaultStorage, wrapper: KeyWrapper):
+    def __init__(self, storage: VaultStorage, wrapper: KeyWrapper, sealed_wrapper: KeyWrapper | None = None,
+                 cache_ttl_seconds: int = 300, cache_max_entries: int = 10_000):
         self.storage = storage
         self.wrapper = wrapper
-        self._cache: dict[str, bytes] = {}
+        # Sealed (hold_/escrow_) DEKs are wrapped by a separate KEK. Applications need only
+        # Encrypt on it; Decrypt is reserved for the break-glass role.
+        self.sealed_wrapper = sealed_wrapper or wrapper
+        self.cache_ttl = cache_ttl_seconds
+        self.cache_max = cache_max_entries
+        self._cache: OrderedDict[str, tuple[bytes, float]] = OrderedDict()
         self._lock = threading.Lock()
         self._lookup_key = self._dek(_LOOKUP_ID, create=True)
 
     # ---- keys ------------------------------------------------------------
+    def _wrapper_for(self, principal_id: str) -> KeyWrapper:
+        return self.sealed_wrapper if principal_id.startswith(RESTRICTED_PREFIXES) else self.wrapper
+
     def _dek(self, principal_id: str, create: bool = False) -> bytes | None:
+        sealed = principal_id.startswith(RESTRICTED_PREFIXES)
         with self._lock:
-            if principal_id in self._cache:
-                return self._cache[principal_id]
+            hit = self._cache.get(principal_id)
+            if hit and hit[1] > time.monotonic():
+                self._cache.move_to_end(principal_id)
+                return hit[0]
+            self._cache.pop(principal_id, None)
             wrapped = self.storage.get_key(principal_id)
             if wrapped is None:
                 if not create:
                     return None
                 dek = AESGCM.generate_key(bit_length=256)
-                self.storage.put_key(principal_id, self.wrapper.wrap(dek, principal_id))
+                self.storage.put_key(principal_id, self._wrapper_for(principal_id).wrap(dek, principal_id))
             else:
-                dek = self.wrapper.unwrap(wrapped, principal_id)
-            self._cache[principal_id] = dek
+                dek = self._wrapper_for(principal_id).unwrap(wrapped, principal_id)
+            if not sealed:          # sealed keys are never cached: every read goes back to KMS
+                self._cache[principal_id] = (dek, time.monotonic() + self.cache_ttl)
+                while len(self._cache) > self.cache_max:
+                    self._cache.popitem(last=False)
             return dek
+
+    def mac(self, data: bytes) -> str:
+        """Keyed hash with the vault's secret lookup key (for OTP hashes etc.)."""
+        return hmac.new(self._lookup_key, data, hashlib.sha256).hexdigest()
+
+    def values_of_type(self, principal_id: str, element_type: str) -> list[str]:
+        out = []
+        for t in self.tokens_for(principal_id):
+            rec = self.storage.get_value(t)
+            if rec and rec[1] == element_type:
+                v = self.detokenize(t)
+                if v:
+                    out.append(v)
+        return out
 
     def has_key(self, principal_id: str) -> bool:
         return self._dek(principal_id) is not None
@@ -149,6 +181,7 @@ class Vault:
         return out
 
     def _reseal(self, tokens, new_owner: str) -> int:
+        # Wrap a fresh sealed DEK (Encrypt only); if one exists, it must be unwrapped via the sealed KEK.
         dek = self._dek(new_owner, create=True)
         n = 0
         for tok in tokens:

@@ -1,0 +1,33 @@
+# AWS Distro for OpenTelemetry (ADOT) collector: framework + agent spans -> X-Ray, metrics -> CloudWatch.
+# The framework already tokenises spans in-process (TokenizingSpanExporter); the redaction
+# processor below is defence in depth for anything exported by other services.
+receivers:
+  otlp:
+    protocols:
+      http: {endpoint: 0.0.0.0:4318}
+      grpc: {endpoint: 0.0.0.0:4317}
+
+processors:
+  batch: {}
+  redaction:
+    allow_all_keys: true
+    blocked_values:
+      - "[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\\.[A-Za-z0-9-]+)+"      # email
+      - "(\\+91[\\- ]?)?[6-9][0-9]{4}[\\- ]?[0-9]{5}"              # Indian mobile
+      - "[2-9][0-9]{3}[ -]?[0-9]{4}[ -]?[0-9]{4}"                  # Aadhaar-shaped
+      - "[A-Z]{3}[ABCFGHLJPT][A-Z][0-9]{4}[A-Z]"                   # PAN
+    summary: info
+
+exporters:
+  awsxray:
+    region: ${env:AWS_REGION}
+    indexed_attributes: [dpdp.principal, dpdp.purpose, dpdp.request_id]   # -> annotations used by aws_xray connector
+  awsemf:
+    region: ${env:AWS_REGION}
+    namespace: DPDPRights
+    resource_to_telemetry_conversion: {enabled: true}
+
+service:
+  pipelines:
+    traces: {receivers: [otlp], processors: [redaction, batch], exporters: [awsxray]}
+    metrics: {receivers: [otlp], processors: [batch], exporters: [awsemf]}

@@ -1,0 +1,75 @@
+# Production reference for Google Cloud. Passes `dpdp-rights check-config` with no errors.
+# Infra: deploy/terraform/gcp (main.tf + security.tf). Collector: deploy/otel/collector-gcp.yaml.
+environment: production
+tenant: ${TENANT:-acme-insurance}
+
+provider:
+  type: ${DPDP_PROVIDER:-vertex}            # vertex | anthropic (platform: vertex) | openai
+  model: ${VERTEX_MODEL:-gemini-2.5-flash}
+  embedding_model: text-embedding-005
+  project: ${GOOGLE_CLOUD_PROJECT}
+  region: ${VERTEX_LOCATION:-asia-south1}
+
+pii:
+  detectors: [regex, gcp_dlp]
+  project: ${GOOGLE_CLOUD_PROJECT}
+
+vault:
+  key_wrapper: gcp_kms
+  kms_key_id: projects/${GOOGLE_CLOUD_PROJECT}/locations/asia-south1/keyRings/dpdp/cryptoKeys/vault-kek
+  storage: firestore
+  project: ${DPDP_VAULT_PROJECT}                 # separate project recommended
+  sealed_key_wrapper: gcp_kms
+  sealed_kms_key_id: projects/${GOOGLE_CLOUD_PROJECT}/locations/asia-south1/keyRings/dpdp/cryptoKeys/sealed-kek
+
+lineage:
+  url: ${DPDP_LINEAGE_URL}                    # Cloud SQL / AlloyDB PostgreSQL
+
+api:
+  auth:
+    mode: oidc
+    oidc:
+      issuer: https://securetoken.google.com/${GOOGLE_CLOUD_PROJECT}   # Identity Platform
+      audience: ${GOOGLE_CLOUD_PROJECT}
+      jwks_url: https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com
+      roles_claim: roles                      # custom claim set via Admin SDK
+
+verification:
+  required: true
+  channel: email
+  notifier: webhook                           # your email/SMS sender (Pub/Sub push, SendGrid, Gupshup...)
+  webhook_url: ${DPDP_NOTIFY_WEBHOOK}
+
+certificates:
+  signer: gcp_kms
+  key_id: projects/${GOOGLE_CLOUD_PROJECT}/locations/asia-south1/keyRings/dpdp/cryptoKeys/cert-signing/cryptoKeyVersions/1
+  archive: gcs
+  archive_uri: gs://${GOOGLE_CLOUD_PROJECT}-dpdp-certificates/certificates
+
+observability:
+  otel: true
+  otlp_endpoint: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://localhost:4318}
+
+purposes:
+  - {id: policy_issuance, description: Process the application and issue the policy}
+  - {id: marketing, description: Cross-sell and renewal campaigns}
+
+connectors:
+  - name: agent_engine_sessions
+    type: gcp_agent_engine_sessions
+    options: {reasoning_engine: "projects/${GOOGLE_CLOUD_PROJECT}/locations/asia-south1/reasoningEngines/${AGENT_ENGINE_ID}"}
+  - name: memory_bank
+    type: gcp_vertex_memory_bank
+    options: {reasoning_engine: "projects/${GOOGLE_CLOUD_PROJECT}/locations/asia-south1/reasoningEngines/${AGENT_ENGINE_ID}"}
+  - name: cloud_logging
+    type: gcp_cloud_logging
+    options: {project: "${GOOGLE_CLOUD_PROJECT}"}
+  - name: cloud_trace
+    type: gcp_cloud_trace
+    options: {project: "${GOOGLE_CLOUD_PROJECT}"}
+  - name: vector_search
+    type: gcp_vertex_vector_search
+    options: {index: "projects/${GOOGLE_CLOUD_PROJECT}/locations/asia-south1/indexes/${INDEX_ID}"}
+
+policy:
+  aggregate_k_threshold: 10

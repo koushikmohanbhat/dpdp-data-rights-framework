@@ -36,20 +36,38 @@ class LocalKeyWrapper:
 
 
 class AwsKmsKeyWrapper:
-    """Uses the KMS encryption context to bind each wrapped DEK to its principal."""
+    """Uses the KMS encryption context to bind each wrapped DEK to its principal.
 
-    def __init__(self, key_id: str, region: str | None = None, client=None):
+    With ``role_arn``, Decrypt calls are made with credentials from that role (e.g. a break-glass
+    role for sealed keys), while Encrypt uses the application's own credentials.
+    """
+
+    def __init__(self, key_id: str, region: str | None = None, client=None, role_arn: str | None = None,
+                 decrypt_client=None):
         import boto3
 
-        self.key_id = key_id
+        self.key_id, self.region, self.role_arn = key_id, region, role_arn
         self.client = client or boto3.client("kms", region_name=region)
+        self._decrypt_client = decrypt_client
+
+    def _dclient(self):
+        if self._decrypt_client is not None:
+            return self._decrypt_client
+        if not self.role_arn:
+            return self.client
+        import boto3
+
+        creds = boto3.client("sts", region_name=self.region).assume_role(
+            RoleArn=self.role_arn, RoleSessionName="dpdp-break-glass", DurationSeconds=900)["Credentials"]
+        return boto3.client("kms", region_name=self.region, aws_access_key_id=creds["AccessKeyId"],
+                            aws_secret_access_key=creds["SecretAccessKey"], aws_session_token=creds["SessionToken"])
 
     def wrap(self, dek: bytes, context: str) -> bytes:
         r = self.client.encrypt(KeyId=self.key_id, Plaintext=dek, EncryptionContext={"dpdp:principal": context})
         return r["CiphertextBlob"]
 
     def unwrap(self, blob: bytes, context: str) -> bytes:
-        r = self.client.decrypt(CiphertextBlob=blob, EncryptionContext={"dpdp:principal": context})
+        r = self._dclient().decrypt(CiphertextBlob=blob, EncryptionContext={"dpdp:principal": context})
         return r["Plaintext"]
 
 
@@ -85,3 +103,15 @@ def build_key_wrapper(cfg) -> KeyWrapper:
             raise ValueError("vault.kms_key_id (projects/../cryptoKeys/..) is required for gcp_kms")
         return GcpKmsKeyWrapper(cfg.kms_key_id)
     raise ValueError(f"Unknown key wrapper {cfg.key_wrapper}")
+
+
+def build_sealed_key_wrapper(cfg) -> KeyWrapper | None:
+    if cfg.sealed_key_wrapper is None:
+        return None
+    if cfg.sealed_key_wrapper == "local":
+        return LocalKeyWrapper(cfg.sealed_local_master_key_path)
+    if not cfg.sealed_kms_key_id:
+        raise ValueError("vault.sealed_kms_key_id is required for a KMS sealed key wrapper")
+    if cfg.sealed_key_wrapper == "aws_kms":
+        return AwsKmsKeyWrapper(cfg.sealed_kms_key_id, cfg.region, role_arn=cfg.sealed_role_arn)
+    return GcpKmsKeyWrapper(cfg.sealed_kms_key_id)

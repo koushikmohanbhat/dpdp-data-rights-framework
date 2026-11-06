@@ -1,0 +1,71 @@
+# Offline configuration: no cloud accounts or API keys needed.
+# Used by the demo (examples/insurance_onboarding) and tests.
+#
+# Purposes and stores are the only domain-specific parts. Rename them for your
+# agent: lending (loan_origination, collections), healthcare (care_delivery),
+# telecom (onboarding, retention), HR (hiring), retail (order_fulfilment)...
+tenant: demo
+
+provider:
+  type: ${DPDP_PROVIDER:-echo}     # echo | openai | anthropic | bedrock | vertex
+  model: ${DPDP_MODEL:-echo}
+
+pii:
+  detectors: [regex]
+
+vault:
+  key_wrapper: local
+  storage: sql
+  local_master_key_path: .dpdp/master.key
+
+lineage:
+  url: sqlite:///.dpdp/lineage.db
+
+purposes:
+  - id: policy_issuance
+    description: Process the application, underwrite and issue the policy
+  - id: analytics
+    description: Aggregate portfolio and funnel analytics
+  - id: marketing
+    description: Cross-sell and renewal campaigns
+  - id: model_improvement
+    description: Evaluate and improve the AI agent using real interactions
+  - id: kyc_regulatory
+    description: KYC records
+    legal_basis: legitimate_use
+    legal_hold_basis: "Example: KYC record keeping required by sector regulation (PMLA / IRDAI). Validate with counsel."
+
+connectors:
+  - name: applications
+    type: sql_table
+    options: {url: "sqlite:///.dpdp/app.db", table: applications, id_column: id, content_column: body, principal_column: principal_id}
+  - name: kyc_records
+    type: sql_table
+    options: {url: "sqlite:///.dpdp/app.db", table: kyc_records, id_column: id, content_column: body, principal_column: principal_id}
+  - name: summaries
+    type: sql_table
+    options: {url: "sqlite:///.dpdp/app.db", table: summaries, id_column: id, content_column: body, kind: summary}
+  - name: vectors
+    type: sql_table
+    options: {url: "sqlite:///.dpdp/app.db", table: chunks, id_column: id, content_column: chunk, embedding_column: embedding, kind: embedding}
+  - name: agent_cache
+    type: sql_table
+    options: {url: "sqlite:///.dpdp/app.db", table: cache, id_column: id, content_column: answer, kind: cache_entry}
+  - name: audiences
+    type: sql_table
+    options: {url: "sqlite:///.dpdp/app.db", table: audiences, id_column: id, content_column: body, principal_column: principal_id}
+  - name: eval_set
+    type: jsonl_dataset
+    options: {path: .dpdp/evals/agent_golden.jsonl, id_field: id, kind: eval_row}
+  - name: app_log
+    type: log_file
+    options: {path: .dpdp/app.log}
+
+policy:
+  default_action: delete
+  aggregate_k_threshold: 5        # demo value; use >= 10 in production
+  sla_days: 30
+  rules:
+    - kind: eval_row
+      action: delete
+      reason: Eval rows are replaceable; never keep personal data in golden sets

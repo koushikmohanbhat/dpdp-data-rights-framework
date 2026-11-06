@@ -1,0 +1,110 @@
+# Example deployment inventory for the insurance onboarding demo (fictional).
+# Run:  dpdp-rights -c config/dpdp.local.yaml coverage --inventory examples/insurance_onboarding/inventory.yaml
+# Template with every field explained: partner-pack/inventory.template.yaml
+
+engagement:
+  client: Example General Insurance (fictional)
+  system: Onboarding agent
+  prepared_by: Partner delivery team
+  dpo: dpo@example.in
+  prepared_on: 2026-11-06
+
+systems:
+  - name: Application database
+    category: database
+    platform: PostgreSQL
+    data_elements: [NAME, EMAIL, PHONE_IN, AADHAAR, PAN, FREE_TEXT]
+    purposes: [policy_issuance]
+    region: ap-south-1
+    owner: Onboarding engineering
+    connector: applications
+    tested_on: 2026-11-06
+    test_evidence: demo run, certificate er_demo
+
+  - name: KYC records
+    category: database
+    platform: PostgreSQL
+    data_elements: [NAME, AADHAAR, PAN]
+    purposes: [kyc_regulatory]
+    region: ap-south-1
+    owner: Compliance
+    connector: kyc_records
+    tested_on: 2026-11-06
+
+  - name: Underwriting notes and portfolio reports
+    category: database
+    data_elements: [FREE_TEXT]
+    purposes: [policy_issuance, analytics]
+    region: ap-south-1
+    owner: Underwriting
+    connector: summaries
+    tested_on: 2026-11-06
+
+  - name: Retrieval index
+    category: vector_store
+    platform: pgvector
+    purposes: [policy_issuance]
+    region: ap-south-1
+    owner: Onboarding engineering
+    connector: vectors
+    tested_on: 2026-11-06
+
+  - name: Agent response cache
+    category: cache
+    purposes: [policy_issuance]
+    region: ap-south-1
+    owner: Onboarding engineering
+    connector: agent_cache
+    tested_on: 2026-11-06
+
+  - name: Cross-sell audiences
+    category: database
+    purposes: [marketing]
+    region: ap-south-1
+    owner: Marketing
+    connector: audiences
+    tested_on: 2026-11-06
+
+  - name: Agent evaluation set
+    category: dataset
+    platform: JSONL
+    purposes: [model_improvement]
+    region: ap-south-1
+    owner: AI quality
+    connector: eval_set
+    tested_on: 2026-11-06
+
+  - name: Application log
+    category: logs
+    purposes: [policy_issuance]
+    region: ap-south-1
+    owner: Platform
+    connector: app_log
+    retention_days: 90          # under one year: the report flags Rule 8(3)
+    tested_on: 2026-11-06
+
+  - name: Contact-centre call recordings
+    category: saas
+    platform: Cloud contact centre
+    data_elements: [NAME, PHONE_IN, FREE_TEXT]
+    purposes: [policy_issuance]
+    region: ap-south-1
+    owner: Customer service
+    processor: Contact-centre vendor
+    processor_contract: MSA schedule 4, clause 7.2
+    manual_procedure: Runbook CC-07, delete recordings by caller number in the vendor console
+    tested_on: 2026-09-15
+
+  - name: Email campaign platform
+    category: saas
+    platform: Marketing email SaaS
+    data_elements: [NAME, EMAIL]
+    purposes: [marketing]
+    region: us-east-1
+    owner: Marketing
+    processor: Email platform vendor      # no connector, no procedure, no contract reference: a gap
+
+  - name: Product catalogue
+    category: database
+    holds_personal_data: false
+    owner: Product

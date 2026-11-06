@@ -1,0 +1,17 @@
+.dpdp/
+__pycache__/
+*.pyc
+.pytest_cache/
+.venv/
+dist/
+*.egg-info/
+.terraform/
+*.tfstate*
+master.key
+
+# local Terraform inputs and state
+*.tfvars
+!*.tfvars.example
+.terraform.lock.hcl
+config/private/
+config/*.local.yaml

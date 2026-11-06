@@ -1,0 +1,39 @@
+# Copy to terraform.tfvars (git-ignored) and fill in. Do not commit real values.
+
+region      = "ap-south-1"
+environment = "prod"
+tenant      = "acme-insurance"
+
+# Bring your own VPC: two+ private subnets with egress to AWS APIs (NAT or VPC endpoints)
+vpc_id             = "vpc-0123456789abcdef0"
+private_subnet_ids = ["subnet-0aaa...", "subnet-0bbb..."]
+allowed_cidrs      = ["10.0.0.0/16"]   # who may call the internal API
+certificate_arn    = ""                # ACM cert ARN for HTTPS (strongly recommended)
+
+# Your edited copy of config/dpdp.production.aws.yaml, kept outside the repo
+dpdp_config_file = "../../../../my-dpdp-config/dpdp.yaml"
+
+image_tag                  = "0.2.0"
+bedrock_model_id           = "<model or inference profile ID enabled in your account>"
+bedrock_embedding_model_id = "amazon.titan-embed-text-v2:0"
+
+# dpdp-rights hash-api-key <your-random-key>
+service_api_key_sha256 = "<64-char hex>"
+
+# DPO users/roles allowed to assume the break-glass role (with MFA)
+break_glass_principals = ["arn:aws:iam::111122223333:role/dpo-admin"]
+
+# Placeholders used by connectors you enabled in your config
+extra_environment = {
+  # AGENTCORE_MEMORY_ID = "mem-..."
+  # AGENT_RUNTIME_ID    = "..."
+}
+
+# IAM policies granting the task role access to your agent's stores
+extra_task_policy_arns = []
+
+# Test accounts only: allow deleting test certificates
+# certificate_lock_mode      = "GOVERNANCE"
+# certificate_retention_days = 1
+# db_multi_az                = false
+# db_deletion_protection     = false

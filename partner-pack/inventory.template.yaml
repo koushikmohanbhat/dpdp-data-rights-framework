@@ -1,0 +1,39 @@
+# Deployment inventory: every system in scope that may hold personal data.
+#
+# Copy this file outside the repository, fill it in during discovery, and run:
+#   dpdp-rights -c <your config> coverage --inventory inventory.yaml --format html --output coverage.html
+#
+# The coverage report checks each system against the framework config and the connectors' capabilities,
+# and flags gaps, untested systems, processors without contract references, logs kept under one year,
+# and regions outside India. Worked example: examples/insurance_onboarding/inventory.yaml
+
+engagement:
+  client: <client name>
+  system: <agent or application in scope>
+  prepared_by: <partner team>
+  dpo: <client DPO contact>
+  prepared_on: 2026-01-01
+
+systems:
+  # One entry per system. Include anything the agent writes to or reads from, directly or indirectly:
+  # databases, vector stores, caches, agent memory, logs, traces, LLM observability, object storage,
+  # datasets (eval, fine-tuning), warehouses, model providers that keep state, SaaS tools, backups.
+  - name: <human-readable system name>
+    description: <what it holds and why>
+    # database | vector_store | cache | agent_memory | logs | traces | object_store | dataset |
+    # warehouse | model_provider | saas | identity | backup | other
+    category: database
+    platform: <product, e.g. Aurora PostgreSQL, AgentCore Memory, Zendesk>
+    holds_personal_data: true          # false = listed for completeness, out of scope
+    data_elements: [NAME, EMAIL, PHONE_IN, FREE_TEXT]   # element types, as in pii-detection.md
+    purposes: [<purpose id from the config>]
+    region: ap-south-1                 # where the data is stored
+    owner: <team accountable for the system>
+    processor: null                    # third party running it on the client's behalf, if any
+    processor_contract: null           # reference to the clause that requires erasure on instruction
+    connector: null                    # connector name in the framework config, if automated
+    manual_procedure: null             # runbook reference, if handled manually
+    retention_days: null               # how long the system keeps data (logs: at least 365 for r.8(3))
+    tested_on: null                    # date the actions on this system last passed an end-to-end test
+    test_evidence: null                # certificate id, test run link, ticket
+    notes: ""

@@ -1,0 +1,105 @@
+# Offline scenarios for the insurance pack: `dpdp-rights packs test insurance`.
+# Copy to an engagement folder, adapt to the client, and run with `--config <client dpdp.yaml>`.
+scenarios:
+  - id: ins-01-marketing-withdrawal
+    title: A policyholder withdraws marketing consent; servicing continues
+    people:
+      - id: cust-1
+        identifiers: {EMAIL: meera.n@example.in}
+        consents: [quote_and_onboarding, servicing, marketing]
+        records:
+          - {id: chat-1, store: agent_chats, kind: record, purpose: quote_and_onboarding,
+             text: "My name is Meera Nair, email meera.n@example.in, phone 9811122233. Policy no HLT-20261187."}
+          - {id: aud-1, store: campaign_audience, kind: record, purpose: marketing,
+             text: "renewal offer list: meera.n@example.in"}
+          - {id: svc-1, store: service_desk, kind: record, purpose: servicing,
+             text: "Endorsement for policy no HLT-20261187, contact 9811122233"}
+    steps:
+      - withdraw: {person: cust-1, purpose: marketing}
+        expect:
+          actions: {aud-1: delete}
+          untouched: [chat-1, svc-1]
+          removed: [aud-1]
+          kept: [svc-1]
+      - protect: {person: cust-1, purpose: marketing, text: "cross-sell motor cover to meera.n@example.in"}
+        expect: {consent_denied: true}
+      - protect: {person: cust-1, purpose: servicing, text: "renewal reminder for 9811122233"}
+        expect: {consent_denied: false}
+
+  - id: ins-02-policyholder-erasure
+    title: An erasure request from a policyholder with an issued policy and a settled claim
+    people:
+      - id: cust-2
+        identifiers: {EMAIL: arjun.k@example.in, PHONE_IN: "9822233344"}
+        consents: [quote_and_onboarding, underwriting, servicing, claims, model_improvement]
+        records:
+          - {id: chat-2, store: agent_chats, kind: record, purpose: quote_and_onboarding,
+             text: "I am Arjun Kapoor, PAN ABCPK1234L, mobile 9822233344"}
+          - {id: vec-2, store: transcript_index, kind: embedding, purpose: quote_and_onboarding,
+             text: "Arjun Kapoor wants motor cover for KA-03-MN-4455"}
+          - {id: pol-2, store: policy_admin, kind: record, purpose: policy_records,
+             text: "Policy no MTR-20265501 issued to arjun.k@example.in, vehicle KA-03-MN-4455"}
+          - {id: kyc-2, store: kyc_vault, kind: record, purpose: kyc_aml,
+             text: "KYC PAN ABCPK1234L verified"}
+          - {id: clm-2, store: claims_system, kind: record, purpose: claims,
+             text: "Claim no CLM-77001234 settled for policy no MTR-20265501"}
+          - {id: eval-2, store: agent_eval_set, kind: eval_row, purpose: model_improvement,
+             text: "I am Arjun Kapoor, PAN ABCPK1234L, mobile 9822233344"}
+    steps:
+      - erase: {person: cust-2}
+        expect:
+          status: completed
+          actions: {chat-2: delete, vec-2: delete, eval-2: delete,
+                    pol-2: retain_legal_hold, kyc-2: retain_legal_hold, clm-2: retain_legal_hold}
+          removed: [chat-2, vec-2, eval-2]
+          kept: [pol-2, kyc-2, clm-2]
+
+  - id: ins-03-nominee-redaction
+    title: A nominee asks to be erased; the policyholder's records keep everything else
+    people:
+      - id: nominee-3
+        identifiers: {EMAIL: kavya.r@example.in}
+        consents: [quote_and_onboarding]
+        records:
+          - {id: chat-n3, store: agent_chats, kind: record, purpose: quote_and_onboarding,
+             text: "I am Kavya Rao, asking about my husband's policy, email kavya.r@example.in"}
+      - id: holder-3
+        consents: [quote_and_onboarding, underwriting]
+        records:
+          - {id: app-3, store: applications, kind: record, purpose: underwriting,
+             text: "I am Vivek Rao. Term plan 1 crore. Nominee my wife, email kavya.r@example.in"}
+    steps:
+      - erase: {person: nominee-3}
+        expect:
+          actions: {chat-n3: delete, app-3: redact}
+          removed: [chat-n3]
+          kept: [app-3]
+          reads: {app-3: "[ERASED]"}
+
+  - id: ins-04-access-and-recipients
+    title: An access report lists the TPA that processed a health claim, not unrelated recipients
+    people:
+      - id: cust-4
+        consents: [claims, servicing]
+        records:
+          - {id: tpa-4, store: tpa_feed, kind: record, purpose: claims,
+             text: "Cashless request for policy no HLT-20269911, patient phone 9833344455"}
+          - {id: svc-4, store: service_desk, kind: record, purpose: servicing,
+             text: "Call back 9833344455 about policy no HLT-20269911"}
+    steps:
+      - access: {person: cust-4}
+        expect:
+          types: [PHONE_IN, POLICY_NUMBER]
+          recipients: ["Third-party administrator (TPA)"]
+          not_recipients: ["Reinsurer"]
+      - grievance: {person: cust-4, category: request_handling, text: "My cashless approval was delayed"}
+        expect: {due_days: 30}
+
+detection:
+  - text: "Policy no HLT-20261187 for Meera, claim number CLM-77001234"
+    types: [POLICY_NUMBER, CLAIM_NUMBER]
+  - text: "Reference RUN-20261187 from the batch job"
+    absent: [POLICY_NUMBER, CLAIM_NUMBER]
+  - text: "Vehicle KA-03-MN-4455, ABHA address meera.n@abdm, nominee phone +91 98111 22334"
+    types: [VEHICLE_REG, ABHA_ADDRESS, PHONE_IN]
+    absent: [UPI_ID]

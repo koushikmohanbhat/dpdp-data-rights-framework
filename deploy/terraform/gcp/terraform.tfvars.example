@@ -1,0 +1,7 @@
+# Copy to a private location (not this repo) and fill in. See docs/deploy-gcp.md.
+project           = "<your-project-id>"
+region            = "asia-south1"
+break_glass_group = "group:dpdp-break-glass@yourcompany.in"
+
+# certificate_retention_days = 3650   # use 1 in test projects; the bucket lock is irreversible
+# purge_job_uri = "https://run.googleapis.com/v2/projects/<project>/locations/<region>/jobs/dpdp-purge-escrows:run"

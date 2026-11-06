@@ -1,0 +1,101 @@
+# Domain pack: insurance (life, health, motor, general). Not legal advice: every legal hold, basis and
+# period below is an example for counsel to confirm for the client's products, and to record in `reviewed`.
+id: insurance
+title: Insurance - onboarding, servicing and claims agents
+version: "2026.11-1"
+reviewed: null
+summary: >-
+  Purposes, legal holds, policy rules, identifier patterns, rights settings, an inventory and offline
+  scenarios for AI agents that quote, onboard, service policies and handle claims.
+
+sources:
+  - law: "Prevention of Money-laundering Act 2002, s.12; PML (Maintenance of Records) Rules 2005"
+    what: >-
+      Insurers are reporting entities. Records evidencing client identity, account files and business
+      correspondence are kept for five years after the business relationship ends; transaction records
+      for five years from the transaction.
+    purposes: [kyc_aml]
+  - law: "IRDAI (Maintenance of Information by the Regulated Entities and Sharing of Information by the Authority) Regulations 2025"
+    what: >-
+      Replaced the IRDAI (Maintenance of Insurance Records) Regulations 2015. Insurers keep a record of every
+      policy issued and every claim made, under a board-approved records policy; commentary reports a minimum
+      of ten years, with settled-claim records kept as specified. Confirm the period for each product.
+    purposes: [policy_records, claims]
+  - law: "DPDP Act 2023, s.7"
+    what: >-
+      Legitimate uses without consent. Record keeping required by law is modelled here as legitimate use;
+      confirm the clause with counsel.
+    purposes: [kyc_aml, policy_records]
+
+config:
+  purposes:
+    - id: quote_and_onboarding
+      description: Answer questions, give quotes and collect an application through the AI agent
+    - id: underwriting
+      description: Assess the risk and decide on the application, including medical disclosures
+    - id: policy_records
+      description: Policy contract records after issue
+      legal_basis: legitimate_use
+      legal_hold_basis: >-
+        Example: policy records kept under the insurer's board-approved records policy, IRDAI (Maintenance of
+        Information by the Regulated Entities and Sharing of Information by the Authority) Regulations 2025
+        (commonly at least ten years). Validate with counsel.
+    - id: claims
+      description: Intimate, assess and settle claims
+      legal_hold_basis: >-
+        Example: claim records kept under the same IRDAI regulations and records policy; settled claims per
+        the specified timelines. Validate with counsel.
+    - id: kyc_aml
+      description: Customer identification and anti-money-laundering checks
+      legal_basis: legitimate_use
+      legal_hold_basis: >-
+        PMLA 2002 s.12: identity records kept five years after the business relationship ends. Validate the
+        start of the period (policy expiry, claim settlement) with counsel.
+    - id: servicing
+      description: Renewals, endorsements, payments and service requests
+    - id: marketing
+      description: Cross-sell and renewal campaigns
+    - id: analytics
+      description: Aggregate portfolio, funnel and claims analytics
+    - id: model_improvement
+      description: Evaluate and improve the AI agent with real interactions
+
+  policy:
+    default_action: delete
+    aggregate_k_threshold: 10
+    rules:
+      - kind: eval_row
+        action: delete
+        reason: Evaluation rows are replaceable; never keep personal data in golden sets
+      - kind: memory_record
+        action: delete
+        reason: Long-term assistant memory has no retention basis once the purpose ends
+      - kind: cache_entry
+        action: delete
+        reason: Cached answers are rebuilt on demand
+
+  pii:
+    patterns:
+      - type: POLICY_NUMBER
+        regex: '\b(?=[A-Z0-9/\-]*\d)[A-Z0-9][A-Z0-9/\-]{6,24}\b'
+        context: ["policy no", "policy number", "policy #", "pol no", "policy:"]
+      - type: CLAIM_NUMBER
+        regex: '\b(?=[A-Z0-9/\-]*\d)[A-Z0-9][A-Z0-9/\-]{6,24}\b'
+        context: ["claim no", "claim number", "claim id", "claim ref", "claim #"]
+    # Health disclosures and nominee details are free text: add an NER, cloud or LLM detector in production.
+
+  rights:
+    identifiers: ["Policy number", "Registered mobile number"]
+    recipients:
+      - {store: tpa_feed, name: "Third-party administrator (TPA)", role: processor,
+         description: "Processes health claims and cashless approvals for us"}
+      - {store: reinsurer_share, name: "Reinsurer", role: fiduciary,
+         description: "Shares the risk on large policies and receives underwriting details"}
+      - {store: campaign_audience, name: "Marketing email and SMS platform", role: processor,
+         description: "Sends renewal and cross-sell messages for us"}
+
+notes:
+  - Nominees appear in the principal's own records; erasing a nominee redacts them from the policyholder's records.
+  - Health disclosures in underwriting are health data; use an NER, cloud or LLM detector, not regex alone.
+  - A claim usually extends the retention period; record claims under the `claims` purpose so the hold applies.
+  - The Insurance Information Bureau and fraud registries may be recipients withheld under s.11(2); confirm with counsel.

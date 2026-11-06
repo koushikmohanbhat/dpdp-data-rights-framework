@@ -1,0 +1,265 @@
+{"entities": [{"end": 27, "start": 15, "type": "NAME"}, {"end": 56, "start": 45, "type": "PHONE_IN"}], "id": "en-001", "lang": "en", "tags": [], "text": "Hi, my name is Anjali Gupta and my number is 08049024097."}
+{"entities": [{"end": 27, "start": 15, "type": "NAME"}, {"end": 56, "start": 45, "type": "PHONE_IN"}], "id": "en-002", "lang": "en", "tags": [], "text": "Hi, my name is Divya Pillai and my number is 77034 28499."}
+{"entities": [{"end": 33, "start": 15, "type": "NAME"}, {"end": 65, "start": 51, "type": "PHONE_IN"}], "id": "en-003", "lang": "en", "tags": [], "text": "Hi, my name is Meenakshi Sundaram and my number is +91 7572052042."}
+{"entities": [{"end": 27, "start": 15, "type": "NAME"}, {"end": 60, "start": 45, "type": "PHONE_IN"}], "id": "en-004", "lang": "en", "tags": [], "text": "Hi, my name is Priya Sharma and my number is +91-64601-60259."}
+{"entities": [{"end": 40, "start": 28, "type": "NAME"}, {"end": 70, "start": 44, "type": "EMAIL"}], "id": "en-005", "lang": "en", "tags": ["uncued_name"], "text": "Please update the email for Kavitha Nair to kavitha.83@mail.example.in."}
+{"entities": [{"end": 40, "start": 28, "type": "NAME"}, {"end": 68, "start": 44, "type": "EMAIL"}], "id": "en-006", "lang": "en", "tags": ["uncued_name"], "text": "Please update the email for Priya Sharma to priya.73@mail.example.in."}
+{"entities": [{"end": 46, "start": 28, "type": "NAME"}, {"end": 78, "start": 50, "type": "EMAIL"}], "id": "en-007", "lang": "en", "tags": ["uncued_name"], "text": "Please update the email for Meenakshi Sundaram to meenakshi.38@mail.example.in."}
+{"entities": [{"end": 40, "start": 28, "type": "NAME"}, {"end": 68, "start": 44, "type": "EMAIL"}], "id": "en-008", "lang": "en", "tags": ["uncued_name"], "text": "Please update the email for Priya Sharma to priya.72@mail.example.in."}
+{"entities": [{"end": 13, "start": 0, "type": "NAME"}, {"end": 62, "start": 48, "type": "AADHAAR"}], "id": "en-009", "lang": "en", "tags": ["uncued_name"], "text": "Fatima Shaikh called about the renewal; Aadhaar 2813-0369-3457."}
+{"entities": [{"end": 12, "start": 0, "type": "NAME"}, {"end": 59, "start": 47, "type": "AADHAAR"}], "id": "en-010", "lang": "en", "tags": ["uncued_name"], "text": "Suresh Patel called about the renewal; Aadhaar 911616978611."}
+{"entities": [{"end": 11, "start": 0, "type": "NAME"}, {"end": 58, "start": 46, "type": "AADHAAR"}], "id": "en-011", "lang": "en", "tags": ["uncued_name"], "text": "Pooja Joshi called about the renewal; Aadhaar 837063927475."}
+{"entities": [{"end": 12, "start": 0, "type": "NAME"}, {"end": 61, "start": 47, "type": "AADHAAR"}], "id": "en-012", "lang": "en", "tags": ["uncued_name"], "text": "Kavitha Nair called about the renewal; Aadhaar 7788 8056 3898."}
+{"entities": [{"end": 14, "start": 4, "type": "PAN"}, {"end": 42, "start": 31, "type": "BANK_ACCOUNT"}], "id": "en-013", "lang": "en", "tags": [], "text": "PAN LKDPB4948A, account number 33662713237."}
+{"entities": [{"end": 14, "start": 4, "type": "PAN"}, {"end": 45, "start": 31, "type": "BANK_ACCOUNT"}], "id": "en-014", "lang": "en", "tags": [], "text": "PAN UZOPK2201U, account number 88851356811357."}
+{"entities": [{"end": 14, "start": 4, "type": "PAN"}, {"end": 42, "start": 31, "type": "BANK_ACCOUNT"}], "id": "en-015", "lang": "en", "tags": [], "text": "PAN DQNPD7634Q, account number 63939713750."}
+{"entities": [{"end": 14, "start": 4, "type": "PAN"}, {"end": 42, "start": 31, "type": "BANK_ACCOUNT"}], "id": "en-016", "lang": "en", "tags": [], "text": "PAN BIKPL6770T, account number 73317801237."}
+{"entities": [{"end": 38, "start": 19, "type": "UPI_ID"}], "id": "en-017", "lang": "en", "tags": [], "text": "I paid through UPI joseph56@okhdfcbank yesterday."}
+{"entities": [{"end": 35, "start": 19, "type": "UPI_ID"}], "id": "en-018", "lang": "en", "tags": [], "text": "I paid through UPI karthik56@okaxis yesterday."}
+{"entities": [{"end": 33, "start": 19, "type": "UPI_ID"}], "id": "en-019", "lang": "en", "tags": [], "text": "I paid through UPI farhan95@paytm yesterday."}
+{"entities": [{"end": 29, "start": 19, "type": "UPI_ID"}], "id": "en-020", "lang": "en", "tags": [], "text": "I paid through UPI arjun5@ybl yesterday."}
+{"entities": [{"end": 27, "start": 8, "type": "CARD_NUMBER"}], "id": "en-021", "lang": "en", "tags": [], "text": "My card 4108 2707 8928 0288 was charged twice."}
+{"entities": [{"end": 27, "start": 8, "type": "CARD_NUMBER"}], "id": "en-022", "lang": "en", "tags": [], "text": "My card 4935 4309 0818 7215 was charged twice."}
+{"entities": [{"end": 24, "start": 8, "type": "CARD_NUMBER"}], "id": "en-023", "lang": "en", "tags": [], "text": "My card 4423652940887036 was charged twice."}
+{"entities": [{"end": 27, "start": 8, "type": "CARD_NUMBER"}], "id": "en-024", "lang": "en", "tags": [], "text": "My card 4006 8124 1109 9132 was charged twice."}
+{"entities": [{"end": 27, "start": 17, "type": "VEHICLE_REG"}, {"end": 55, "start": 43, "type": "NAME"}], "id": "en-025", "lang": "en", "tags": ["uncued_name"], "text": "Car registration KA14AB6105, policy holder Divya Pillai."}
+{"entities": [{"end": 27, "start": 17, "type": "VEHICLE_REG"}, {"end": 55, "start": 43, "type": "NAME"}], "id": "en-026", "lang": "en", "tags": ["uncued_name"], "text": "Car registration TS49AB3655, policy holder Anjali Gupta."}
+{"entities": [{"end": 30, "start": 17, "type": "VEHICLE_REG"}, {"end": 61, "start": 46, "type": "NAME"}], "id": "en-027", "lang": "en", "tags": ["uncued_name"], "text": "Car registration MH 09 AB 7928, policy holder Sneha Deshpande."}
+{"entities": [{"end": 27, "start": 17, "type": "VEHICLE_REG"}, {"end": 56, "start": 43, "type": "NAME"}], "id": "en-028", "lang": "en", "tags": ["uncued_name"], "text": "Car registration KA10AB6485, policy holder Venkatesh Rao."}
+{"entities": [{"end": 55, "start": 14, "type": "ADDRESS"}], "id": "en-029", "lang": "en", "tags": [], "text": "My address is House No. 155, Sector 21, Gurugram 600018."}
+{"entities": [{"end": 61, "start": 14, "type": "ADDRESS"}], "id": "en-030", "lang": "en", "tags": [], "text": "My address is 146/2, 5th Cross, Indiranagar, Bengaluru 560041."}
+{"entities": [{"end": 55, "start": 14, "type": "ADDRESS"}], "id": "en-031", "lang": "en", "tags": [], "text": "My address is House No. 353, Sector 21, Gurugram 700091."}
+{"entities": [{"end": 63, "start": 14, "type": "ADDRESS"}], "id": "en-032", "lang": "en", "tags": [], "text": "My address is Flat 119, Shanti Apartments, MG Road, Pune 625001."}
+{"entities": [{"end": 81, "start": 32, "type": "ADDRESS"}], "id": "en-033", "lang": "en", "tags": ["uncued_address"], "text": "Please deliver the documents to Flat 155, Shanti Apartments, MG Road, Pune 600018 by Friday."}
+{"entities": [{"end": 74, "start": 32, "type": "ADDRESS"}], "id": "en-034", "lang": "en", "tags": ["uncued_address"], "text": "Please deliver the documents to 179, Anna Salai, Teynampet, Chennai 411001 by Friday."}
+{"entities": [{"end": 81, "start": 32, "type": "ADDRESS"}], "id": "en-035", "lang": "en", "tags": ["uncued_address"], "text": "Please deliver the documents to Flat 403, Shanti Apartments, MG Road, Pune 122001 by Friday."}
+{"entities": [{"end": 78, "start": 32, "type": "ADDRESS"}], "id": "en-036", "lang": "en", "tags": ["uncued_address"], "text": "Please deliver the documents to 12/2, 5th Cross, Indiranagar, Bengaluru 122001 by Friday."}
+{"entities": [{"end": 27, "start": 9, "type": "NAME"}, {"end": 82, "start": 67, "type": "PHONE_IN"}], "id": "en-037", "lang": "en", "tags": ["uncued_name"], "text": "Spoke to Nandini Chatterjee from the branch, she will call back on +91-93382-61848."}
+{"entities": [{"end": 21, "start": 9, "type": "NAME"}, {"end": 75, "start": 61, "type": "PHONE_IN"}], "id": "en-038", "lang": "en", "tags": ["uncued_name"], "text": "Spoke to Divya Pillai from the branch, she will call back on +91 9924268667."}
+{"entities": [{"end": 19, "start": 9, "type": "NAME"}, {"end": 73, "start": 59, "type": "PHONE_IN"}], "id": "en-039", "lang": "en", "tags": ["uncued_name"], "text": "Spoke to Imran Khan from the branch, she will call back on +91 6799727847."}
+{"entities": [{"end": 22, "start": 9, "type": "NAME"}, {"end": 72, "start": 62, "type": "PHONE_IN"}], "id": "en-040", "lang": "en", "tags": ["uncued_name"], "text": "Spoke to Lakshmi Menon from the branch, she will call back on 7796822240."}
+{"entities": [{"end": 28, "start": 10, "type": "NAME"}, {"end": 59, "start": 49, "type": "PHONE_IN"}], "id": "hi-Latn-001", "lang": "hi-Latn", "tags": [], "text": "Mera naam Meenakshi Sundaram hai aur mera number 9730471206 hai."}
+{"entities": [{"end": 22, "start": 10, "type": "NAME"}, {"end": 54, "start": 43, "type": "PHONE_IN"}], "id": "hi-Latn-002", "lang": "hi-Latn", "tags": [], "text": "Mera naam Kavitha Nair hai aur mera number 67022 94412 hai."}
+{"entities": [{"end": 22, "start": 10, "type": "NAME"}, {"end": 57, "start": 43, "type": "PHONE_IN"}], "id": "hi-Latn-003", "lang": "hi-Latn", "tags": [], "text": "Mera naam Priya Sharma hai aur mera number +91 6793221935 hai."}
+{"entities": [{"end": 24, "start": 10, "type": "NAME"}, {"end": 56, "start": 45, "type": "PHONE_IN"}], "id": "hi-Latn-004", "lang": "hi-Latn", "tags": [], "text": "Mera naam deepa kulkarni hai aur mera number 77893 15040 hai."}
+{"entities": [{"end": 13, "start": 0, "type": "NAME"}, {"end": 52, "start": 26, "type": "EMAIL"}], "id": "hi-Latn-005", "lang": "hi-Latn", "tags": ["uncued_name"], "text": "Lakshmi Menon ji ka email lakshmi.78@mail.example.in hai, please update kar do."}
+{"entities": [{"end": 16, "start": 0, "type": "NAME"}, {"end": 54, "start": 29, "type": "EMAIL"}], "id": "hi-Latn-006", "lang": "hi-Latn", "tags": ["uncued_name"], "text": "Joseph Fernandes ji ka email joseph.85@mail.example.in hai, please update kar do."}
+{"entities": [{"end": 11, "start": 0, "type": "NAME"}, {"end": 48, "start": 24, "type": "EMAIL"}], "id": "hi-Latn-007", "lang": "hi-Latn", "tags": ["uncued_name"], "text": "arjun reddy ji ka email arjun.90@mail.example.in hai, please update kar do."}
+{"entities": [{"end": 16, "start": 0, "type": "NAME"}, {"end": 54, "start": 29, "type": "EMAIL"}], "id": "hi-Latn-008", "lang": "hi-Latn", "tags": ["uncued_name"], "text": "Joseph Fernandes ji ka email joseph.24@mail.example.in hai, please update kar do."}
+{"entities": [{"end": 27, "start": 15, "type": "AADHAAR"}], "id": "hi-Latn-009", "lang": "hi-Latn", "tags": [], "text": "Aadhaar number 874921637563 hai mera, verify kar lo."}
+{"entities": [{"end": 27, "start": 15, "type": "AADHAAR"}], "id": "hi-Latn-010", "lang": "hi-Latn", "tags": [], "text": "Aadhaar number 397167191891 hai mera, verify kar lo."}
+{"entities": [{"end": 27, "start": 15, "type": "AADHAAR"}], "id": "hi-Latn-011", "lang": "hi-Latn", "tags": [], "text": "Aadhaar number 423788538729 hai mera, verify kar lo."}
+{"entities": [{"end": 29, "start": 15, "type": "AADHAAR"}], "id": "hi-Latn-012", "lang": "hi-Latn", "tags": [], "text": "Aadhaar number 4153-7810-7373 hai mera, verify kar lo."}
+{"entities": [{"end": 21, "start": 6, "type": "UPI_ID"}], "id": "hi-Latn-013", "lang": "hi-Latn", "tags": [], "text": "Maine sanjay46@okaxis pe payment kiya tha kal."}
+{"entities": [{"end": 18, "start": 6, "type": "UPI_ID"}], "id": "hi-Latn-014", "lang": "hi-Latn", "tags": [], "text": "Maine ananya90@ybl pe payment kiya tha kal."}
+{"entities": [{"end": 18, "start": 6, "type": "UPI_ID"}], "id": "hi-Latn-015", "lang": "hi-Latn", "tags": [], "text": "Maine aditya93@ybl pe payment kiya tha kal."}
+{"entities": [{"end": 19, "start": 6, "type": "UPI_ID"}], "id": "hi-Latn-016", "lang": "hi-Latn", "tags": [], "text": "Maine kavitha17@ybl pe payment kiya tha kal."}
+{"entities": [{"end": 20, "start": 10, "type": "PAN"}, {"end": 46, "start": 34, "type": "BANK_ACCOUNT"}], "id": "hi-Latn-017", "lang": "hi-Latn", "tags": [], "text": "Bhai, PAN YHVPX1367K hai, account 887470005117 mein refund chahiye."}
+{"entities": [{"end": 20, "start": 10, "type": "PAN"}, {"end": 46, "start": 34, "type": "BANK_ACCOUNT"}], "id": "hi-Latn-018", "lang": "hi-Latn", "tags": [], "text": "Bhai, PAN KRSPN0225K hai, account 255333094454 mein refund chahiye."}
+{"entities": [{"end": 20, "start": 10, "type": "PAN"}, {"end": 45, "start": 34, "type": "BANK_ACCOUNT"}], "id": "hi-Latn-019", "lang": "hi-Latn", "tags": [], "text": "Bhai, PAN TGXPO2959X hai, account 64124720465 mein refund chahiye."}
+{"entities": [{"end": 20, "start": 10, "type": "PAN"}, {"end": 46, "start": 34, "type": "BANK_ACCOUNT"}], "id": "hi-Latn-020", "lang": "hi-Latn", "tags": [], "text": "Bhai, PAN VSUPI0797M hai, account 199595616430 mein refund chahiye."}
+{"entities": [{"end": 29, "start": 16, "type": "VEHICLE_REG"}], "id": "hi-Latn-021", "lang": "hi-Latn", "tags": [], "text": "Gaadi ka number TN 30 CK 2199 hai."}
+{"entities": [{"end": 29, "start": 16, "type": "VEHICLE_REG"}], "id": "hi-Latn-022", "lang": "hi-Latn", "tags": [], "text": "Gaadi ka number 21 BH 8349 AA hai."}
+{"entities": [{"end": 29, "start": 16, "type": "VEHICLE_REG"}], "id": "hi-Latn-023", "lang": "hi-Latn", "tags": [], "text": "Gaadi ka number 22 BH 3478 AA hai."}
+{"entities": [{"end": 29, "start": 16, "type": "VEHICLE_REG"}], "id": "hi-Latn-024", "lang": "hi-Latn", "tags": [], "text": "Gaadi ka number TS 14 MN 1990 hai."}
+{"entities": [{"end": 62, "start": 13, "type": "ADDRESS"}], "id": "hi-Latn-025", "lang": "hi-Latn", "tags": [], "text": "Mera address Flat 166, Shanti Apartments, MG Road, Pune 560038 hai."}
+{"entities": [{"end": 61, "start": 13, "type": "ADDRESS"}], "id": "hi-Latn-026", "lang": "hi-Latn", "tags": [], "text": "Mera address Flat 44, Shanti Apartments, MG Road, Pune 625001 hai."}
+{"entities": [{"end": 55, "start": 13, "type": "ADDRESS"}], "id": "hi-Latn-027", "lang": "hi-Latn", "tags": [], "text": "Mera address 403, Anna Salai, Teynampet, Chennai 560041 hai."}
+{"entities": [{"end": 55, "start": 13, "type": "ADDRESS"}], "id": "hi-Latn-028", "lang": "hi-Latn", "tags": [], "text": "Mera address 383, Anna Salai, Teynampet, Chennai 625001 hai."}
+{"entities": [{"end": 18, "start": 4, "type": "NAME"}], "id": "hi-Latn-029", "lang": "hi-Latn", "tags": ["uncued_name"], "text": "Kal Harpreet Singh ne call kiya tha claim ke liye."}
+{"entities": [{"end": 15, "start": 4, "type": "NAME"}], "id": "hi-Latn-030", "lang": "hi-Latn", "tags": ["uncued_name"], "text": "Kal Pooja Joshi ne call kiya tha claim ke liye."}
+{"entities": [{"end": 14, "start": 4, "type": "NAME"}], "id": "hi-Latn-031", "lang": "hi-Latn", "tags": ["uncued_name"], "text": "Kal Imran Khan ne call kiya tha claim ke liye."}
+{"entities": [{"end": 16, "start": 4, "type": "NAME"}], "id": "hi-Latn-032", "lang": "hi-Latn", "tags": ["uncued_name"], "text": "Kal sanjay yadav ne call kiya tha claim ke liye."}
+{"entities": [{"end": 21, "start": 5, "type": "CARD_NUMBER"}], "id": "hi-Latn-033", "lang": "hi-Latn", "tags": [], "text": "Card 4717409443574388 se do baar paisa kat gaya."}
+{"entities": [{"end": 21, "start": 5, "type": "CARD_NUMBER"}], "id": "hi-Latn-034", "lang": "hi-Latn", "tags": [], "text": "Card 4288823826945339 se do baar paisa kat gaya."}
+{"entities": [{"end": 21, "start": 5, "type": "CARD_NUMBER"}], "id": "hi-Latn-035", "lang": "hi-Latn", "tags": [], "text": "Card 4630842321891181 se do baar paisa kat gaya."}
+{"entities": [{"end": 24, "start": 5, "type": "CARD_NUMBER"}], "id": "hi-Latn-036", "lang": "hi-Latn", "tags": [], "text": "Card 4272 8465 6362 6620 se do baar paisa kat gaya."}
+{"entities": [{"end": 17, "start": 6, "type": "PHONE_IN"}], "id": "hi-Latn-037", "lang": "hi-Latn", "tags": [], "text": "Mujhe 06148505664 pe call back karo please."}
+{"entities": [{"end": 17, "start": 6, "type": "PHONE_IN"}], "id": "hi-Latn-038", "lang": "hi-Latn", "tags": [], "text": "Mujhe 92874 21217 pe call back karo please."}
+{"entities": [{"end": 16, "start": 6, "type": "PHONE_IN"}], "id": "hi-Latn-039", "lang": "hi-Latn", "tags": [], "text": "Mujhe 9631733748 pe call back karo please."}
+{"entities": [{"end": 21, "start": 6, "type": "PHONE_IN"}], "id": "hi-Latn-040", "lang": "hi-Latn", "tags": [], "text": "Mujhe +91-94954-45855 pe call back karo please."}
+{"entities": [{"end": 18, "start": 9, "type": "NAME"}, {"end": 57, "start": 42, "type": "PHONE_IN"}], "id": "hi-001", "lang": "hi", "tags": [], "text": "मेरा नाम रवि पाटिल है और मेरा मोबाइल नंबर +91-88108-92951 है।"}
+{"entities": [{"end": 18, "start": 9, "type": "NAME"}, {"end": 53, "start": 42, "type": "PHONE_IN"}], "id": "hi-002", "lang": "hi", "tags": [], "text": "मेरा नाम रवि पाटिल है और मेरा मोबाइल नंबर 84968 90759 है।"}
+{"entities": [{"end": 21, "start": 9, "type": "NAME"}, {"end": 56, "start": 45, "type": "PHONE_IN"}], "id": "hi-003", "lang": "hi", "tags": ["native_digits"], "text": "मेरा नाम प्रिया शर्मा है और मेरा मोबाइल नंबर ९९०१४ ७९२७९ है।"}
+{"entities": [{"end": 18, "start": 9, "type": "NAME"}, {"end": 57, "start": 42, "type": "PHONE_IN"}], "id": "hi-004", "lang": "hi", "tags": [], "text": "मेरा नाम रवि पाटिल है और मेरा मोबाइल नंबर +91-80261-96086 है।"}
+{"entities": [{"end": 12, "start": 0, "type": "NAME"}, {"end": 40, "start": 26, "type": "AADHAAR"}], "id": "hi-005", "lang": "hi", "tags": ["native_digits", "uncued_name"], "text": "कविता मिश्रा का आधार नंबर २७७० ९८१० ९७६६ है।"}
+{"entities": [{"end": 13, "start": 0, "type": "NAME"}, {"end": 41, "start": 27, "type": "AADHAAR"}], "id": "hi-006", "lang": "hi", "tags": ["uncued_name"], "text": "अनन्या गुप्ता का आधार नंबर 3864-6172-0140 है।"}
+{"entities": [{"end": 12, "start": 0, "type": "NAME"}, {"end": 38, "start": 26, "type": "AADHAAR"}], "id": "hi-007", "lang": "hi", "tags": ["uncued_name"], "text": "प्रिया शर्मा का आधार नंबर 565219423608 है।"}
+{"entities": [{"end": 15, "start": 0, "type": "NAME"}, {"end": 41, "start": 29, "type": "AADHAAR"}], "id": "hi-008", "lang": "hi", "tags": ["uncued_name"], "text": "स्नेहा देशपांडे का आधार नंबर 499954126208 है।"}
+{"entities": [{"end": 43, "start": 9, "type": "ADDRESS"}], "id": "hi-009", "lang": "hi", "tags": [], "text": "मेरा पता फ्लैट 398, शिवाजी नगर, पुणे 302001 है।"}
+{"entities": [{"end": 47, "start": 9, "type": "ADDRESS"}], "id": "hi-010", "lang": "hi", "tags": [], "text": "मेरा पता मकान नंबर 283, गांधी नगर, जयपुर 411001 है।"}
+{"entities": [{"end": 47, "start": 9, "type": "ADDRESS"}], "id": "hi-011", "lang": "hi", "tags": [], "text": "मेरा पता मकान नंबर 366, गांधी नगर, जयपुर 122001 है।"}
+{"entities": [{"end": 43, "start": 9, "type": "ADDRESS"}], "id": "hi-012", "lang": "hi", "tags": [], "text": "मेरा पता फ्लैट 284, शिवाजी नगर, पुणे 560038 है।"}
+{"entities": [{"end": 31, "start": 6, "type": "EMAIL"}], "id": "hi-013", "lang": "hi", "tags": [], "text": "कृपया anjali.30@mail.example.in पर जानकारी भेजें।"}
+{"entities": [{"end": 30, "start": 6, "type": "EMAIL"}], "id": "hi-014", "lang": "hi", "tags": [], "text": "कृपया rahul.89@mail.example.in पर जानकारी भेजें।"}
+{"entities": [{"end": 30, "start": 6, "type": "EMAIL"}], "id": "hi-015", "lang": "hi", "tags": [], "text": "कृपया pooja.16@mail.example.in पर जानकारी भेजें।"}
+{"entities": [{"end": 31, "start": 6, "type": "EMAIL"}], "id": "hi-016", "lang": "hi", "tags": [], "text": "कृपया fatima.46@mail.example.in पर जानकारी भेजें।"}
+{"entities": [{"end": 26, "start": 12, "type": "BANK_ACCOUNT"}], "id": "hi-017", "lang": "hi", "tags": [], "text": "खाता संख्या 58354387922849 में पैसा वापस करें।"}
+{"entities": [{"end": 23, "start": 12, "type": "BANK_ACCOUNT"}], "id": "hi-018", "lang": "hi", "tags": [], "text": "खाता संख्या 78205677078 में पैसा वापस करें।"}
+{"entities": [{"end": 23, "start": 12, "type": "BANK_ACCOUNT"}], "id": "hi-019", "lang": "hi", "tags": [], "text": "खाता संख्या 62646149796 में पैसा वापस करें।"}
+{"entities": [{"end": 24, "start": 12, "type": "BANK_ACCOUNT"}], "id": "hi-020", "lang": "hi", "tags": [], "text": "खाता संख्या 139909165372 में पैसा वापस करें।"}
+{"entities": [{"end": 13, "start": 3, "type": "NAME"}], "id": "hi-021", "lang": "hi", "tags": ["uncued_name"], "text": "कल अमित कुमार जी ने शिकायत दर्ज की।"}
+{"entities": [{"end": 12, "start": 3, "type": "NAME"}], "id": "hi-022", "lang": "hi", "tags": ["uncued_name"], "text": "कल पूजा सिंह जी ने शिकायत दर्ज की।"}
+{"entities": [{"end": 18, "start": 3, "type": "NAME"}], "id": "hi-023", "lang": "hi", "tags": ["uncued_name"], "text": "कल स्नेहा देशपांडे जी ने शिकायत दर्ज की।"}
+{"entities": [{"end": 12, "start": 3, "type": "NAME"}], "id": "hi-024", "lang": "hi", "tags": ["uncued_name"], "text": "कल रवि पाटिल जी ने शिकायत दर्ज की।"}
+{"entities": [{"end": 19, "start": 9, "type": "PAN"}], "id": "hi-025", "lang": "hi", "tags": [], "text": "मेरा पैन GVUPI1857E है।"}
+{"entities": [{"end": 19, "start": 9, "type": "PAN"}], "id": "hi-026", "lang": "hi", "tags": [], "text": "मेरा पैन GQEPI7540P है।"}
+{"entities": [{"end": 19, "start": 9, "type": "PAN"}], "id": "hi-027", "lang": "hi", "tags": [], "text": "मेरा पैन VYWPO4969Z है।"}
+{"entities": [{"end": 19, "start": 9, "type": "PAN"}], "id": "hi-028", "lang": "hi", "tags": [], "text": "मेरा पैन UTYPV1203C है।"}
+{"entities": [{"end": 23, "start": 9, "type": "NAME"}, {"end": 49, "start": 39, "type": "PHONE_IN"}], "id": "mr-001", "lang": "mr", "tags": ["native_digits"], "text": "माझं नाव सुनील कुलकर्णी आहे, माझा नंबर ९८०३९९०२८३ आहे."}
+{"entities": [{"end": 19, "start": 9, "type": "NAME"}, {"end": 46, "start": 35, "type": "PHONE_IN"}], "id": "mr-002", "lang": "mr", "tags": [], "text": "माझं नाव अमित कुमार आहे, माझा नंबर 06267483156 आहे."}
+{"entities": [{"end": 21, "start": 9, "type": "NAME"}, {"end": 47, "start": 37, "type": "PHONE_IN"}], "id": "mr-003", "lang": "mr", "tags": [], "text": "माझं नाव कविता मिश्रा आहे, माझा नंबर 6824837670 आहे."}
+{"entities": [{"end": 21, "start": 9, "type": "NAME"}, {"end": 48, "start": 37, "type": "PHONE_IN"}], "id": "mr-004", "lang": "mr", "tags": [], "text": "माझं नाव प्रिया शर्मा आहे, माझा नंबर 95196 46950 आहे."}
+{"entities": [{"end": 14, "start": 0, "type": "NAME"}, {"end": 51, "start": 26, "type": "EMAIL"}], "id": "mr-005", "lang": "mr", "tags": ["uncued_name"], "text": "सुनील कुलकर्णी यांचा ईमेल suresh.77@mail.example.in आहे."}
+{"entities": [{"end": 9, "start": 0, "type": "NAME"}, {"end": 46, "start": 21, "type": "EMAIL"}], "id": "mr-006", "lang": "mr", "tags": ["uncued_name"], "text": "नेहा जोशी यांचा ईमेल suresh.63@mail.example.in आहे."}
+{"entities": [{"end": 13, "start": 0, "type": "NAME"}, {"end": 49, "start": 25, "type": "EMAIL"}], "id": "mr-007", "lang": "mr", "tags": ["uncued_name"], "text": "अनन्या गुप्ता यांचा ईमेल priya.40@mail.example.in आहे."}
+{"entities": [{"end": 12, "start": 0, "type": "NAME"}, {"end": 50, "start": 24, "type": "EMAIL"}], "id": "mr-008", "lang": "mr", "tags": ["uncued_name"], "text": "कविता मिश्रा यांचा ईमेल nandini.83@mail.example.in आहे."}
+{"entities": [{"end": 45, "start": 11, "type": "ADDRESS"}], "id": "mr-009", "lang": "mr", "tags": ["native_digits"], "text": "माझा पत्ता फ्लैट २४७, शिवाजी नगर, पुणे १२२००१ आहे."}
+{"entities": [{"end": 45, "start": 11, "type": "ADDRESS"}], "id": "mr-010", "lang": "mr", "tags": [], "text": "माझा पत्ता फ्लैट 215, शिवाजी नगर, पुणे 560041 आहे."}
+{"entities": [{"end": 49, "start": 11, "type": "ADDRESS"}], "id": "mr-011", "lang": "mr", "tags": [], "text": "माझा पत्ता मकान नंबर 328, गांधी नगर, जयपुर 560038 आहे."}
+{"entities": [{"end": 49, "start": 11, "type": "ADDRESS"}], "id": "mr-012", "lang": "mr", "tags": ["native_digits"], "text": "माझा पत्ता मकान नंबर ३४३, गांधी नगर, जयपुर ७०००९१ आहे."}
+{"entities": [{"end": 25, "start": 13, "type": "AADHAAR"}], "id": "mr-013", "lang": "mr", "tags": ["native_digits"], "text": "आधार क्रमांक २१६९३४६८७६१४."}
+{"entities": [{"end": 27, "start": 13, "type": "AADHAAR"}], "id": "mr-014", "lang": "mr", "tags": ["native_digits"], "text": "आधार क्रमांक ५६९० ००७३ ०२४४."}
+{"entities": [{"end": 25, "start": 13, "type": "AADHAAR"}], "id": "mr-015", "lang": "mr", "tags": [], "text": "आधार क्रमांक 644312574226."}
+{"entities": [{"end": 27, "start": 13, "type": "AADHAAR"}], "id": "mr-016", "lang": "mr", "tags": ["native_digits"], "text": "आधार क्रमांक ८३५२-५३४५-७५९४."}
+{"entities": [{"end": 20, "start": 9, "type": "NAME"}, {"end": 43, "start": 32, "type": "PHONE_IN"}], "id": "ta-Latn-001", "lang": "ta-Latn", "tags": ["romanised_cue"], "text": "En peyar pooja joshi, en number 07739545925."}
+{"entities": [{"end": 25, "start": 9, "type": "NAME"}, {"end": 47, "start": 37, "type": "PHONE_IN"}], "id": "ta-Latn-002", "lang": "ta-Latn", "tags": ["romanised_cue"], "text": "En peyar Joseph Fernandes, en number 8734913356."}
+{"entities": [{"end": 27, "start": 9, "type": "NAME"}, {"end": 49, "start": 39, "type": "PHONE_IN"}], "id": "ta-Latn-003", "lang": "ta-Latn", "tags": ["romanised_cue"], "text": "En peyar Meenakshi Sundaram, en number 8605359104."}
+{"entities": [{"end": 22, "start": 9, "type": "NAME"}, {"end": 49, "start": 34, "type": "PHONE_IN"}], "id": "ta-Latn-004", "lang": "ta-Latn", "tags": ["romanised_cue"], "text": "En peyar Venkatesh Rao, en number +91-83852-58871."}
+{"entities": [{"end": 13, "start": 0, "type": "NAME"}, {"end": 49, "start": 24, "type": "EMAIL"}], "id": "ta-Latn-005", "lang": "ta-Latn", "tags": ["uncued_name"], "text": "Fatima Shaikh oda email fatima.85@mail.example.in update pannunga."}
+{"entities": [{"end": 14, "start": 0, "type": "NAME"}, {"end": 50, "start": 25, "type": "EMAIL"}], "id": "ta-Latn-006", "lang": "ta-Latn", "tags": ["uncued_name"], "text": "Farhan Qureshi oda email farhan.57@mail.example.in update pannunga."}
+{"entities": [{"end": 15, "start": 0, "type": "NAME"}, {"end": 50, "start": 26, "type": "EMAIL"}], "id": "ta-Latn-007", "lang": "ta-Latn", "tags": ["uncued_name"], "text": "Sneha Deshpande oda email sneha.63@mail.example.in update pannunga."}
+{"entities": [{"end": 14, "start": 0, "type": "NAME"}, {"end": 49, "start": 25, "type": "EMAIL"}], "id": "ta-Latn-008", "lang": "ta-Latn", "tags": ["uncued_name"], "text": "Rohan Banerjee oda email rohan.55@mail.example.in update pannunga."}
+{"entities": [{"end": 22, "start": 8, "type": "AADHAAR"}], "id": "ta-Latn-009", "lang": "ta-Latn", "tags": [], "text": "Aadhaar 9919-7667-9595 kudukaren, check pannunga."}
+{"entities": [{"end": 20, "start": 8, "type": "AADHAAR"}], "id": "ta-Latn-010", "lang": "ta-Latn", "tags": [], "text": "Aadhaar 599154870670 kudukaren, check pannunga."}
+{"entities": [{"end": 22, "start": 8, "type": "AADHAAR"}], "id": "ta-Latn-011", "lang": "ta-Latn", "tags": [], "text": "Aadhaar 5055-7678-6890 kudukaren, check pannunga."}
+{"entities": [{"end": 20, "start": 8, "type": "AADHAAR"}], "id": "ta-Latn-012", "lang": "ta-Latn", "tags": [], "text": "Aadhaar 970814673140 kudukaren, check pannunga."}
+{"entities": [{"end": 19, "start": 4, "type": "UPI_ID"}], "id": "ta-Latn-013", "lang": "ta-Latn", "tags": [], "text": "UPI aditya66@okaxis la anuppunga."}
+{"entities": [{"end": 15, "start": 4, "type": "UPI_ID"}], "id": "ta-Latn-014", "lang": "ta-Latn", "tags": [], "text": "UPI imran27@ybl la anuppunga."}
+{"entities": [{"end": 23, "start": 4, "type": "UPI_ID"}], "id": "ta-Latn-015", "lang": "ta-Latn", "tags": [], "text": "UPI joseph33@okhdfcbank la anuppunga."}
+{"entities": [{"end": 15, "start": 4, "type": "UPI_ID"}], "id": "ta-Latn-016", "lang": "ta-Latn", "tags": [], "text": "UPI priya79@ybl la anuppunga."}
+{"entities": [{"end": 25, "start": 13, "type": "VEHICLE_REG"}], "id": "ta-Latn-017", "lang": "ta-Latn", "tags": [], "text": "Vandi number 25 BH 5002 B."}
+{"entities": [{"end": 25, "start": 13, "type": "VEHICLE_REG"}], "id": "ta-Latn-018", "lang": "ta-Latn", "tags": [], "text": "Vandi number 26 BH 1334 B."}
+{"entities": [{"end": 23, "start": 13, "type": "VEHICLE_REG"}], "id": "ta-Latn-019", "lang": "ta-Latn", "tags": [], "text": "Vandi number TN42CK7145."}
+{"entities": [{"end": 23, "start": 13, "type": "VEHICLE_REG"}], "id": "ta-Latn-020", "lang": "ta-Latn", "tags": [], "text": "Vandi number TN02CK1414."}
+{"entities": [{"end": 26, "start": 10, "type": "NAME"}, {"end": 60, "start": 45, "type": "PHONE_IN"}], "id": "ta-001", "lang": "ta", "tags": [], "text": "என் பெயர் லட்சுமி நாராயணன், என் தொலைபேசி எண் +91-69476-09870."}
+{"entities": [{"end": 22, "start": 10, "type": "NAME"}, {"end": 55, "start": 41, "type": "PHONE_IN"}], "id": "ta-002", "lang": "ta", "tags": [], "text": "என் பெயர் அருண் குமார், என் தொலைபேசி எண் +91 7104154794."}
+{"entities": [{"end": 22, "start": 10, "type": "NAME"}, {"end": 52, "start": 41, "type": "PHONE_IN"}], "id": "ta-003", "lang": "ta", "tags": [], "text": "என் பெயர் அருண் குமார், என் தொலைபேசி எண் 09502152595."}
+{"entities": [{"end": 22, "start": 10, "type": "NAME"}, {"end": 56, "start": 41, "type": "PHONE_IN"}], "id": "ta-004", "lang": "ta", "tags": [], "text": "என் பெயர் அருண் குமார், என் தொலைபேசி எண் +91-80464-74429."}
+{"entities": [{"end": 11, "start": 0, "type": "NAME"}, {"end": 57, "start": 33, "type": "EMAIL"}], "id": "ta-005", "lang": "ta", "tags": ["uncued_name"], "text": "கவிதா ரமேஷ் அவர்களின் மின்னஞ்சல் arjun.27@mail.example.in."}
+{"entities": [{"end": 12, "start": 0, "type": "NAME"}, {"end": 58, "start": 34, "type": "EMAIL"}], "id": "ta-006", "lang": "ta", "tags": ["uncued_name"], "text": "அருண் குமார் அவர்களின் மின்னஞ்சல் rohan.99@mail.example.in."}
+{"entities": [{"end": 12, "start": 0, "type": "NAME"}, {"end": 59, "start": 34, "type": "EMAIL"}], "id": "ta-007", "lang": "ta", "tags": ["uncued_name"], "text": "அருண் குமார் அவர்களின் மின்னஞ்சல் sanjay.10@mail.example.in."}
+{"entities": [{"end": 11, "start": 0, "type": "NAME"}, {"end": 58, "start": 33, "type": "EMAIL"}], "id": "ta-008", "lang": "ta", "tags": ["uncued_name"], "text": "கவிதா ரமேஷ் அவர்களின் மின்னஞ்சல் ananya.75@mail.example.in."}
+{"entities": [{"end": 38, "start": 8, "type": "ADDRESS"}], "id": "ta-009", "lang": "ta", "tags": [], "text": "முகவரி: 213, காந்தி தெரு, மதுரை 700091"}
+{"entities": [{"end": 38, "start": 8, "type": "ADDRESS"}], "id": "ta-010", "lang": "ta", "tags": ["native_digits"], "text": "முகவரி: ௪௪௬, காந்தி தெரு, மதுரை ௭௦௦௦௯௧"}
+{"entities": [{"end": 38, "start": 8, "type": "ADDRESS"}], "id": "ta-011", "lang": "ta", "tags": ["native_digits"], "text": "முகவரி: ௪௦௬, அண்ணா நகர், சென்னை ௫௬௦௦௪௧"}
+{"entities": [{"end": 38, "start": 8, "type": "ADDRESS"}], "id": "ta-012", "lang": "ta", "tags": [], "text": "முகவரி: 102, அண்ணா நகர், சென்னை 302001"}
+{"entities": [{"end": 24, "start": 10, "type": "AADHAAR"}], "id": "ta-013", "lang": "ta", "tags": [], "text": "ஆதார் எண் 3567 0379 8784."}
+{"entities": [{"end": 24, "start": 10, "type": "AADHAAR"}], "id": "ta-014", "lang": "ta", "tags": ["native_digits"], "text": "ஆதார் எண் ௮௦௦௫-௮௨௭௦-௬௨௧௭."}
+{"entities": [{"end": 24, "start": 10, "type": "AADHAAR"}], "id": "ta-015", "lang": "ta", "tags": [], "text": "ஆதார் எண் 7163-1933-2715."}
+{"entities": [{"end": 24, "start": 10, "type": "AADHAAR"}], "id": "ta-016", "lang": "ta", "tags": [], "text": "ஆதார் எண் 6033-4147-1282."}
+{"entities": [{"end": 23, "start": 9, "type": "NAME"}, {"end": 47, "start": 36, "type": "PHONE_IN"}], "id": "te-Latn-001", "lang": "te-Latn", "tags": ["romanised_cue"], "text": "Naa peru farhan qureshi, naa number 88749 76015."}
+{"entities": [{"end": 22, "start": 9, "type": "NAME"}, {"end": 49, "start": 35, "type": "PHONE_IN"}], "id": "te-Latn-002", "lang": "te-Latn", "tags": ["romanised_cue"], "text": "Naa peru Venkatesh Rao, naa number +91 6517792445."}
+{"entities": [{"end": 21, "start": 9, "type": "NAME"}, {"end": 44, "start": 34, "type": "PHONE_IN"}], "id": "te-Latn-003", "lang": "te-Latn", "tags": ["romanised_cue"], "text": "Naa peru kavitha nair, naa number 9503291474."}
+{"entities": [{"end": 20, "start": 9, "type": "NAME"}, {"end": 44, "start": 33, "type": "PHONE_IN"}], "id": "te-Latn-004", "lang": "te-Latn", "tags": ["romanised_cue"], "text": "Naa peru rahul verma, naa number 07483804806."}
+{"entities": [{"end": 18, "start": 0, "type": "NAME"}, {"end": 56, "start": 30, "type": "EMAIL"}], "id": "te-Latn-005", "lang": "te-Latn", "tags": ["uncued_name"], "text": "Nandini Chatterjee garu email nandini.75@mail.example.in ki pampandi."}
+{"entities": [{"end": 14, "start": 0, "type": "NAME"}, {"end": 53, "start": 26, "type": "EMAIL"}], "id": "te-Latn-006", "lang": "te-Latn", "tags": ["uncued_name"], "text": "Harpreet Singh garu email harpreet.15@mail.example.in ki pampandi."}
+{"entities": [{"end": 14, "start": 0, "type": "NAME"}, {"end": 50, "start": 26, "type": "EMAIL"}], "id": "te-Latn-007", "lang": "te-Latn", "tags": ["uncued_name"], "text": "Deepa Kulkarni garu email deepa.18@mail.example.in ki pampandi."}
+{"entities": [{"end": 14, "start": 0, "type": "NAME"}, {"end": 50, "start": 26, "type": "EMAIL"}], "id": "te-Latn-008", "lang": "te-Latn", "tags": ["uncued_name"], "text": "Deepa Kulkarni garu email deepa.64@mail.example.in ki pampandi."}
+{"entities": [{"end": 14, "start": 4, "type": "PAN"}], "id": "te-Latn-009", "lang": "te-Latn", "tags": [], "text": "PAN TRQPY0008A ivvandi."}
+{"entities": [{"end": 14, "start": 4, "type": "PAN"}], "id": "te-Latn-010", "lang": "te-Latn", "tags": [], "text": "PAN KQBPO8338X ivvandi."}
+{"entities": [{"end": 14, "start": 4, "type": "PAN"}], "id": "te-Latn-011", "lang": "te-Latn", "tags": [], "text": "PAN YMEPE9441K ivvandi."}
+{"entities": [{"end": 14, "start": 4, "type": "PAN"}], "id": "te-Latn-012", "lang": "te-Latn", "tags": [], "text": "PAN FSFPI4206Z ivvandi."}
+{"entities": [{"end": 21, "start": 8, "type": "NAME"}, {"end": 47, "start": 37, "type": "PHONE_IN"}], "id": "te-001", "lang": "te", "tags": ["native_digits"], "text": "నా పేరు వెంకటేష్ రావు, నా ఫోన్ నంబర్ ౬౦౧౮౧౫౯౭౫౫."}
+{"entities": [{"end": 25, "start": 8, "type": "NAME"}, {"end": 52, "start": 41, "type": "PHONE_IN"}], "id": "te-002", "lang": "te", "tags": [], "text": "నా పేరు శ్రీనివాస్ రెడ్డి, నా ఫోన్ నంబర్ 09986931788."}
+{"entities": [{"end": 21, "start": 8, "type": "NAME"}, {"end": 47, "start": 37, "type": "PHONE_IN"}], "id": "te-003", "lang": "te", "tags": [], "text": "నా పేరు వెంకటేష్ రావు, నా ఫోన్ నంబర్ 7141049027."}
+{"entities": [{"end": 20, "start": 8, "type": "NAME"}, {"end": 51, "start": 36, "type": "PHONE_IN"}], "id": "te-004", "lang": "te", "tags": [], "text": "నా పేరు లక్ష్మి దేవి, నా ఫోన్ నంబర్ +91-82816-00717."}
+{"entities": [{"end": 17, "start": 0, "type": "NAME"}, {"end": 43, "start": 29, "type": "AADHAAR"}], "id": "te-005", "lang": "te", "tags": ["uncued_name"], "text": "శ్రీనివాస్ రెడ్డి గారి ఆధార్ 6787 9523 1246."}
+{"entities": [{"end": 13, "start": 0, "type": "NAME"}, {"end": 37, "start": 25, "type": "AADHAAR"}], "id": "te-006", "lang": "te", "tags": ["native_digits", "uncued_name"], "text": "వెంకటేష్ రావు గారి ఆధార్ ౩౪౨౯౧౬౩౨౫౩౩౩."}
+{"entities": [{"end": 12, "start": 0, "type": "NAME"}, {"end": 36, "start": 24, "type": "AADHAAR"}], "id": "te-007", "lang": "te", "tags": ["uncued_name"], "text": "లక్ష్మి దేవి గారి ఆధార్ 748178763414."}
+{"entities": [{"end": 12, "start": 0, "type": "NAME"}, {"end": 38, "start": 24, "type": "AADHAAR"}], "id": "te-008", "lang": "te", "tags": ["native_digits", "uncued_name"], "text": "ప్రియ రెడ్డి గారి ఆధార్ ౩౪౭౪-౨౭౨౦-౦౩౬౫."}
+{"entities": [{"end": 46, "start": 10, "type": "ADDRESS"}], "id": "te-009", "lang": "te", "tags": [], "text": "చిరునామా: 306, బంజారా హిల్స్, హైదరాబాద్ 625001"}
+{"entities": [{"end": 46, "start": 10, "type": "ADDRESS"}], "id": "te-010", "lang": "te", "tags": [], "text": "చిరునామా: 478, బంజారా హిల్స్, హైదరాబాద్ 625001"}
+{"entities": [{"end": 44, "start": 10, "type": "ADDRESS"}], "id": "te-011", "lang": "te", "tags": ["native_digits"], "text": "చిరునామా: ౫, బంజారా హిల్స్, హైదరాబాద్ ౪౧౧౦౦౧"}
+{"entities": [{"end": 46, "start": 10, "type": "ADDRESS"}], "id": "te-012", "lang": "te", "tags": ["native_digits"], "text": "చిరునామా: ౪౫౧, బంజారా హిల్స్, హైదరాబాద్ ౫౬౦౦౪౧"}
+{"entities": [{"end": 20, "start": 9, "type": "NAME"}, {"end": 51, "start": 37, "type": "PHONE_IN"}], "id": "bn-001", "lang": "bn", "tags": ["native_digits"], "text": "আমার নাম প্রিয়া দাস, আমার ফোন নম্বর +৯১ ৯৯৯০৪৭৮০০৬।"}
+{"entities": [{"end": 29, "start": 9, "type": "NAME"}, {"end": 56, "start": 46, "type": "PHONE_IN"}], "id": "bn-002", "lang": "bn", "tags": [], "text": "আমার নাম সৌরভ বন্দ্যোপাধ্যায়, আমার ফোন নম্বর 9429848896।"}
+{"entities": [{"end": 29, "start": 9, "type": "NAME"}, {"end": 57, "start": 46, "type": "PHONE_IN"}], "id": "bn-003", "lang": "bn", "tags": ["native_digits"], "text": "আমার নাম সৌরভ বন্দ্যোপাধ্যায়, আমার ফোন নম্বর ৬১৭১৭ ৯৯৬৮০।"}
+{"entities": [{"end": 18, "start": 9, "type": "NAME"}, {"end": 46, "start": 35, "type": "PHONE_IN"}], "id": "bn-004", "lang": "bn", "tags": ["native_digits"], "text": "আমার নাম রাহুল ঘোষ, আমার ফোন নম্বর ০৯১২৬১৫৫২৪২।"}
+{"entities": [{"end": 20, "start": 0, "type": "NAME"}, {"end": 55, "start": 29, "type": "EMAIL"}], "id": "bn-005", "lang": "bn", "tags": ["uncued_name"], "text": "সৌরভ বন্দ্যোপাধ্যায় এর ইমেল karthik.87@mail.example.in।"}
+{"entities": [{"end": 16, "start": 0, "type": "NAME"}, {"end": 49, "start": 25, "type": "EMAIL"}], "id": "bn-006", "lang": "bn", "tags": ["uncued_name"], "text": "মৌমিতা চক্রবর্তী এর ইমেল imran.84@mail.example.in।"}
+{"entities": [{"end": 9, "start": 0, "type": "NAME"}, {"end": 43, "start": 18, "type": "EMAIL"}], "id": "bn-007", "lang": "bn", "tags": ["uncued_name"], "text": "রাহুল ঘোষ এর ইমেল sanjay.18@mail.example.in।"}
+{"entities": [{"end": 16, "start": 0, "type": "NAME"}, {"end": 53, "start": 25, "type": "EMAIL"}], "id": "bn-008", "lang": "bn", "tags": ["uncued_name"], "text": "মৌমিতা চক্রবর্তী এর ইমেল meenakshi.53@mail.example.in।"}
+{"entities": [{"end": 35, "start": 8, "type": "ADDRESS"}], "id": "bn-009", "lang": "bn", "tags": [], "text": "ঠিকানা: 357, সল্টলেক, কলকাতা 411001"}
+{"entities": [{"end": 35, "start": 8, "type": "ADDRESS"}], "id": "bn-010", "lang": "bn", "tags": ["native_digits"], "text": "ঠিকানা: ২০৭, সল্টলেক, কলকাতা ৪১১০০১"}
+{"entities": [{"end": 34, "start": 8, "type": "ADDRESS"}], "id": "bn-011", "lang": "bn", "tags": ["native_digits"], "text": "ঠিকানা: ৮১, সল্টলেক, কলকাতা ৫৬০০৪১"}
+{"entities": [{"end": 35, "start": 8, "type": "ADDRESS"}], "id": "bn-012", "lang": "bn", "tags": [], "text": "ঠিকানা: 192, সল্টলেক, কলকাতা 122001"}
+{"entities": [{"end": 22, "start": 11, "type": "NAME"}, {"end": 51, "start": 41, "type": "PHONE_IN"}], "id": "kn-001", "lang": "kn", "tags": [], "text": "ನನ್ನ ಹೆಸರು ಲಕ್ಷ್ಮಿ ಗೌಡ, ನನ್ನ ಫೋನ್ ಸಂಖ್ಯೆ 6073884278."}
+{"entities": [{"end": 24, "start": 11, "type": "NAME"}, {"end": 54, "start": 43, "type": "PHONE_IN"}], "id": "kn-002", "lang": "kn", "tags": [], "text": "ನನ್ನ ಹೆಸರು ಪ್ರಿಯಾ ಶೆಟ್ಟಿ, ನನ್ನ ಫೋನ್ ಸಂಖ್ಯೆ 96555 71082."}
+{"entities": [{"end": 24, "start": 11, "type": "NAME"}, {"end": 54, "start": 43, "type": "PHONE_IN"}], "id": "kn-003", "lang": "kn", "tags": [], "text": "ನನ್ನ ಹೆಸರು ಸುರೇಶ್ ಹೆಗ್ಡೆ, ನನ್ನ ಫೋನ್ ಸಂಖ್ಯೆ 06752707571."}
+{"entities": [{"end": 24, "start": 11, "type": "NAME"}, {"end": 54, "start": 43, "type": "PHONE_IN"}], "id": "kn-004", "lang": "kn", "tags": [], "text": "ನನ್ನ ಹೆಸರು ಪ್ರಿಯಾ ಶೆಟ್ಟಿ, ನನ್ನ ಫೋನ್ ಸಂಖ್ಯೆ 62518 37454."}
+{"entities": [{"end": 11, "start": 0, "type": "NAME"}, {"end": 50, "start": 22, "type": "EMAIL"}], "id": "kn-005", "lang": "kn", "tags": ["uncued_name"], "text": "ಲಕ್ಷ್ಮಿ ಗೌಡ ಅವರ ಇಮೇಲ್ meenakshi.76@mail.example.in."}
+{"entities": [{"end": 13, "start": 0, "type": "NAME"}, {"end": 48, "start": 24, "type": "EMAIL"}], "id": "kn-006", "lang": "kn", "tags": ["uncued_name"], "text": "ಸುರೇಶ್ ಹೆಗ್ಡೆ ಅವರ ಇಮೇಲ್ deepa.99@mail.example.in."}
+{"entities": [{"end": 10, "start": 0, "type": "NAME"}, {"end": 47, "start": 21, "type": "EMAIL"}], "id": "kn-007", "lang": "kn", "tags": ["uncued_name"], "text": "ರವಿ ಕುಮಾರ್ ಅವರ ಇಮೇಲ್ kavitha.88@mail.example.in."}
+{"entities": [{"end": 11, "start": 0, "type": "NAME"}, {"end": 46, "start": 22, "type": "EMAIL"}], "id": "kn-008", "lang": "kn", "tags": ["uncued_name"], "text": "ಲಕ್ಷ್ಮಿ ಗೌಡ ಅವರ ಇಮೇಲ್ deepa.35@mail.example.in."}
+{"entities": [{"end": 34, "start": 7, "type": "ADDRESS"}], "id": "kn-009", "lang": "kn", "tags": ["native_digits"], "text": "ವಿಳಾಸ: ೨೨೬, ಜಯನಗರ, ಬೆಂಗಳೂರು ೫೬೦೦೪೧"}
+{"entities": [{"end": 34, "start": 7, "type": "ADDRESS"}], "id": "kn-010", "lang": "kn", "tags": [], "text": "ವಿಳಾಸ: 378, ಜಯನಗರ, ಬೆಂಗಳೂರು 122001"}
+{"entities": [{"end": 34, "start": 7, "type": "ADDRESS"}], "id": "kn-011", "lang": "kn", "tags": [], "text": "ವಿಳಾಸ: 340, ಜಯನಗರ, ಬೆಂಗಳೂರು 500034"}
+{"entities": [{"end": 34, "start": 7, "type": "ADDRESS"}], "id": "kn-012", "lang": "kn", "tags": ["native_digits"], "text": "ವಿಳಾಸ: ೩೦೫, ಜಯನಗರ, ಬೆಂಗಳೂರು ೫೬೦೦೩೮"}
+{"entities": [], "id": "neg-001", "lang": "en", "tags": ["negative"], "text": "Your OTP is 999746. Do not share it with anyone."}
+{"entities": [], "id": "neg-002", "lang": "en", "tags": ["negative"], "text": "Order 4548218549 has been shipped."}
+{"entities": [], "id": "neg-003", "lang": "en", "tags": ["negative"], "text": "Premium of Rs 84,970 is due on 09/02/2026."}
+{"entities": [], "id": "neg-004", "lang": "en", "tags": ["negative"], "text": "Ticket number 4778 9521 0517 has been closed."}
+{"entities": [], "id": "neg-005", "lang": "en", "tags": ["negative"], "text": "Claim reference 8938345568 is under review."}
+{"entities": [], "id": "neg-006", "lang": "en", "tags": ["negative"], "text": "Policy POL-2026-428155 was renewed."}
+{"entities": [], "id": "neg-007", "lang": "en", "tags": ["negative"], "text": "Our call centre is open from 9 to 6, Monday to Saturday."}
+{"entities": [], "id": "neg-008", "lang": "en", "tags": ["negative"], "text": "Is service available in pincode 560001?"}
+{"entities": [], "id": "neg-009", "lang": "hi-Latn", "tags": ["negative"], "text": "Aapka OTP 811750 hai, kisi ko mat batana."}
+{"entities": [], "id": "neg-010", "lang": "hi-Latn", "tags": ["negative"], "text": "Order 1020171196 kal tak pahunch jayega."}
+{"entities": [], "id": "neg-011", "lang": "hi-Latn", "tags": ["negative"], "text": "Kal 3 baje call karna, Rs 52,212 ka payment pending hai."}
+{"entities": [], "id": "neg-012", "lang": "hi", "tags": ["negative"], "text": "आपका ओटीपी 423922 है।"}
+{"entities": [], "id": "neg-013", "lang": "hi", "tags": ["negative"], "text": "आपका ऑर्डर 4179144671 भेज दिया गया है।"}
+{"entities": [], "id": "neg-014", "lang": "ta", "tags": ["negative"], "text": "உங்கள் OTP 806848."}
+{"entities": [], "id": "neg-015", "lang": "te", "tags": ["negative"], "text": "మీ OTP 143534."}
+{"entities": [], "id": "neg-016", "lang": "bn", "tags": ["negative"], "text": "আপনার OTP 237134।"}
+{"entities": [], "id": "neg-017", "lang": "kn", "tags": ["negative"], "text": "ನಿಮ್ಮ OTP 469656."}
+{"entities": [], "id": "neg-018", "lang": "ta-Latn", "tags": ["negative"], "text": "Unga order 4757871969 ship aagiduchu."}
+{"entities": [], "id": "neg-019", "lang": "en", "tags": ["negative"], "text": "Invoice INV-53840487 for Rs 52,648 attached."}
+{"entities": [], "id": "neg-020", "lang": "en", "tags": ["negative"], "text": "Your OTP is 615756. Do not share it with anyone."}
+{"entities": [], "id": "neg-021", "lang": "en", "tags": ["negative"], "text": "Order 5886155731 has been shipped."}
+{"entities": [], "id": "neg-022", "lang": "en", "tags": ["negative"], "text": "Premium of Rs 98,990 is due on 28/12/2026."}
+{"entities": [], "id": "neg-023", "lang": "en", "tags": ["negative"], "text": "Ticket number 9970 4378 5558 has been closed."}
+{"entities": [], "id": "neg-024", "lang": "en", "tags": ["negative"], "text": "Claim reference 9568019915 is under review."}
+{"entities": [], "id": "neg-025", "lang": "en", "tags": ["negative"], "text": "Policy POL-2026-180110 was renewed."}
+{"entities": [], "id": "neg-026", "lang": "en", "tags": ["negative"], "text": "Our call centre is open from 9 to 6, Monday to Saturday."}
+{"entities": [], "id": "neg-027", "lang": "en", "tags": ["negative"], "text": "Is service available in pincode 560001?"}
+{"entities": [], "id": "neg-028", "lang": "hi-Latn", "tags": ["negative"], "text": "Aapka OTP 239355 hai, kisi ko mat batana."}
+{"entities": [], "id": "neg-029", "lang": "hi-Latn", "tags": ["negative"], "text": "Order 1738708149 kal tak pahunch jayega."}
+{"entities": [], "id": "neg-030", "lang": "hi-Latn", "tags": ["negative"], "text": "Kal 3 baje call karna, Rs 79,778 ka payment pending hai."}
+{"entities": [], "id": "neg-031", "lang": "hi", "tags": ["negative"], "text": "आपका ओटीपी 237341 है।"}
+{"entities": [], "id": "neg-032", "lang": "hi", "tags": ["negative"], "text": "आपका ऑर्डर 3666064873 भेज दिया गया है।"}
+{"entities": [], "id": "neg-033", "lang": "ta", "tags": ["negative"], "text": "உங்கள் OTP 621690."}
+{"entities": [], "id": "neg-034", "lang": "te", "tags": ["negative"], "text": "మీ OTP 703142."}
+{"entities": [], "id": "neg-035", "lang": "bn", "tags": ["negative"], "text": "আপনার OTP 506647।"}
+{"entities": [], "id": "neg-036", "lang": "kn", "tags": ["negative"], "text": "ನಿಮ್ಮ OTP 224108."}
+{"entities": [], "id": "neg-037", "lang": "ta-Latn", "tags": ["negative"], "text": "Unga order 5113109970 ship aagiduchu."}
+{"entities": [], "id": "neg-038", "lang": "en", "tags": ["negative"], "text": "Invoice INV-10410861 for Rs 2,828 attached."}
+{"entities": [], "id": "neg-039", "lang": "en", "tags": ["negative"], "text": "Your OTP is 949241. Do not share it with anyone."}
+{"entities": [], "id": "neg-040", "lang": "en", "tags": ["negative"], "text": "Order 4114894537 has been shipped."}
+{"entities": [], "id": "neg-041", "lang": "en", "tags": ["negative"], "text": "Premium of Rs 9,312 is due on 28/06/2026."}
+{"entities": [], "id": "neg-042", "lang": "en", "tags": ["negative"], "text": "Ticket number 2074 8173 0685 has been closed."}
+{"entities": [], "id": "neg-043", "lang": "en", "tags": ["negative"], "text": "Claim reference 7645746258 is under review."}
+{"entities": [], "id": "neg-044", "lang": "en", "tags": ["negative"], "text": "Policy POL-2026-581014 was renewed."}
+{"entities": [], "id": "neg-045", "lang": "en", "tags": ["negative"], "text": "Our call centre is open from 9 to 6, Monday to Saturday."}
+{"entities": [], "id": "neg-046", "lang": "en", "tags": ["negative"], "text": "Is service available in pincode 560001?"}
+{"entities": [], "id": "neg-047", "lang": "hi-Latn", "tags": ["negative"], "text": "Aapka OTP 457578 hai, kisi ko mat batana."}
+{"entities": [], "id": "neg-048", "lang": "hi-Latn", "tags": ["negative"], "text": "Order 3717318290 kal tak pahunch jayega."}
+{"entities": [], "id": "neg-049", "lang": "hi-Latn", "tags": ["negative"], "text": "Kal 3 baje call karna, Rs 16,534 ka payment pending hai."}
+{"entities": [], "id": "neg-050", "lang": "hi", "tags": ["negative"], "text": "आपका ओटीपी 831444 है।"}
+{"entities": [], "id": "neg-051", "lang": "hi", "tags": ["negative"], "text": "आपका ऑर्डर 5277680674 भेज दिया गया है।"}
+{"entities": [], "id": "neg-052", "lang": "ta", "tags": ["negative"], "text": "உங்கள் OTP 546157."}
+{"entities": [], "id": "neg-053", "lang": "te", "tags": ["negative"], "text": "మీ OTP 955023."}
+{"entities": [], "id": "neg-054", "lang": "bn", "tags": ["negative"], "text": "আপনার OTP 977202।"}
+{"entities": [], "id": "neg-055", "lang": "kn", "tags": ["negative"], "text": "ನಿಮ್ಮ OTP 349836."}
+{"entities": [], "id": "neg-056", "lang": "ta-Latn", "tags": ["negative"], "text": "Unga order 2116060185 ship aagiduchu."}
+{"entities": [], "id": "neg-057", "lang": "en", "tags": ["negative"], "text": "Invoice INV-36812314 for Rs 40,659 attached."}

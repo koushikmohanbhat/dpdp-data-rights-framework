@@ -1,0 +1,33 @@
+# Starting inventory for a healthcare AI agent. Rename, fill in and delete what does not apply.
+# Fields: partner-pack/inventory.template.yaml.  Run: dpdp-rights -c dpdp.yaml coverage --inventory inventory.yaml
+engagement:
+  client: "<client>"
+  system: Appointment, triage, care-team and claims agent
+  prepared_by: "<partner team>"
+  dpo: "<dpo contact>"
+
+systems:
+  - {name: Agent conversations, category: database, data_elements: [NAME, PHONE_IN, FREE_TEXT],
+     purposes: [appointment_and_triage], region: ap-south-1, owner: Digital, connector: agent_chats,
+     notes: "Symptoms are health data"}
+  - {name: Agent memory, category: agent_memory, data_elements: [NAME, FREE_TEXT], purposes: [appointment_and_triage, care_delivery],
+     region: ap-south-1, owner: Digital, connector: agent_memory}
+  - {name: Care-team summaries, category: database, data_elements: [NAME, UHID, FREE_TEXT], purposes: [care_delivery],
+     region: ap-south-1, owner: Clinical informatics, connector: care_summaries}
+  - {name: Electronic medical record, category: database, data_elements: [NAME, UHID, ABHA_NUMBER, PHONE_IN, FREE_TEXT],
+     purposes: [clinical_records, care_delivery], region: ap-south-1, owner: Medical records, connector: emr}
+  - {name: Clinical knowledge index, category: vector_store, data_elements: [FREE_TEXT], purposes: [care_delivery],
+     region: ap-south-1, owner: Clinical informatics, connector: clinical_index, notes: "Should hold no patient data; verify"}
+  - {name: ABDM gateway (HIP/HIU), category: saas, data_elements: [ABHA_NUMBER, ABHA_ADDRESS], purposes: [abdm_linking],
+     owner: Medical records, connector: abdm_gateway}
+  - {name: Laboratory partner, category: saas, data_elements: [NAME, UHID, PHONE_IN], purposes: [care_delivery],
+     processor: "<lab>", processor_contract: "<clause>", connector: lab_partner}
+  - {name: Insurer and TPA portal, category: saas, data_elements: [NAME, UHID, FREE_TEXT], purposes: [insurance_claims],
+     manual_procedure: "<runbook: insurers are separate fiduciaries; disclose in access reports>", connector: insurer_tpa}
+  - {name: Patient engagement campaigns, category: saas, data_elements: [PHONE_IN, EMAIL], purposes: [marketing],
+     processor: "<platform>", processor_contract: "<clause>", connector: campaign_audience}
+  - {name: Agent evaluation set, category: dataset, data_elements: [FREE_TEXT], purposes: [model_improvement],
+     region: ap-south-1, owner: AI team, connector: agent_eval_set}
+  - {name: Application logs and traces, category: logs, data_elements: [FREE_TEXT], purposes: [appointment_and_triage],
+     region: ap-south-1, owner: Platform, retention_days: 400, connector: app_log,
+     notes: "Names in free text survive shredding unless tokenised; use an NER or LLM detector"}

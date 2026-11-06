@@ -1,0 +1,28 @@
+name: scheduled dependency audit
+# Catches vulnerabilities disclosed after the last push or release, in dependencies that have not changed.
+# Same gate and policy as CI and the release workflow. On failure it opens (or comments on) one tracking issue.
+on:
+  schedule:
+    - cron: "17 3 * * *"        # daily, 08:47 IST
+  workflow_dispatch: {}
+permissions:
+  contents: read
+  issues: write
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
+        with: { python-version: "3.12" }
+      - run: pip install -q pip-audit pyyaml
+      - name: Dependency audit gate
+        run: python scripts/audit_gate.py | tee audit-summary.md
+        shell: bash
+      - name: Open or update the tracking issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          python scripts/audit_issue.py --summary audit-summary.md
+          --run-url "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

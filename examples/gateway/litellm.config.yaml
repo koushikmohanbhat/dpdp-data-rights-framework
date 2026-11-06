@@ -1,0 +1,17 @@
+# LiteLLM proxy with the DPDP guardrail. Start with:
+#   pip install "litellm[proxy]" "dpdp-data-rights-framework[openai]"
+#   DPDP_CONFIG=../../config/dpdp.local.yaml litellm --config litellm.config.yaml --port 4000
+# In enforce mode set gateway.principal_binding to key (dpdp_principal / dpdp_purpose in each virtual key's
+# metadata) or signed (apps send X-DPDP-Assertion). Request headers are only claims. See docs/gateway.md.
+model_list:
+  - model_name: gpt-5
+    litellm_params:
+      model: openai/gpt-5
+      api_key: os.environ/OPENAI_API_KEY
+
+guardrails:
+  - guardrail_name: dpdp
+    litellm_params:
+      guardrail: dpdp_rights.integrations.litellm.DPDPGuardrail
+      mode: [pre_call, post_call]
+      default_on: true

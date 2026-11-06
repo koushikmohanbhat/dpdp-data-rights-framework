@@ -1,0 +1,108 @@
+# Offline scenarios for the healthcare pack: `dpdp-rights packs test healthcare`.
+scenarios:
+  - id: hc-01-abdm-withdrawal
+    title: A patient withdraws ABDM linking; care and records continue
+    people:
+      - id: pat-1
+        identifiers: {ABHA_ADDRESS: lakshmi.p@abdm}
+        consents: [appointment_and_triage, care_delivery, abdm_linking]
+        records:
+          - {id: link-1, store: abdm_gateway, kind: record, purpose: abdm_linking,
+             text: "Linked care context to ABHA address lakshmi.p@abdm"}
+          - {id: note-1, store: emr, kind: record, purpose: clinical_records,
+             text: "UHID HSP-0044512, ABHA 91-2345-6789-0123, discharge summary"}
+    steps:
+      - withdraw: {person: pat-1, purpose: abdm_linking}
+        expect:
+          actions: {link-1: delete}
+          untouched: [note-1]
+          removed: [link-1]
+      - protect: {person: pat-1, purpose: abdm_linking, text: "share records with lakshmi.p@abdm"}
+        expect: {consent_denied: true}
+
+  - id: hc-02-patient-erasure
+    title: An erasure request after treatment; clinical records stay under the legal hold
+    people:
+      - id: pat-2
+        identifiers: {PHONE_IN: "9899900011"}
+        consents: [appointment_and_triage, care_delivery, model_improvement, marketing]
+        records:
+          - {id: triage-2, store: agent_chats, kind: record, purpose: appointment_and_triage,
+             text: "My name is Ramesh Iyer, chest pain since morning, call 9899900011"}
+          - {id: sum-2, store: care_summaries, kind: summary, purpose: care_delivery,
+             text: "Care-team summary. Patient name: Ramesh Iyer, phone 9899900011"}
+          - {id: emr-2, store: emr, kind: record, purpose: clinical_records,
+             text: "UHID HSP-0099871 admitted, contact 9899900011"}
+          - {id: eval-2, store: agent_eval_set, kind: eval_row, purpose: model_improvement,
+             text: "chest pain since morning, call 9899900011"}
+          - {id: promo-2, store: campaign_audience, kind: record, purpose: marketing,
+             text: "Annual check-up offer for 9899900011"}
+    steps:
+      - erase: {person: pat-2}
+        expect:
+          status: completed
+          actions: {triage-2: delete, eval-2: delete, promo-2: delete, sum-2: delete, emr-2: retain_legal_hold}
+          removed: [triage-2, eval-2, promo-2, sum-2]
+          kept: [emr-2]
+
+  - id: hc-03-caregiver-redaction
+    title: A caregiver named in a patient's record asks to be erased
+    people:
+      - id: carer-3
+        identifiers: {PHONE_IN: "9811100022"}
+        consents: [appointment_and_triage]
+        records:
+          - {id: booking-3, store: agent_chats, kind: record, purpose: appointment_and_triage,
+             text: "I am Anil Mehta booking for my mother, my phone 9811100022"}
+      - id: pat-3
+        consents: [care_delivery]
+        records:
+          - {id: sum-3, store: care_summaries, kind: summary, purpose: care_delivery,
+             text: "Patient Sunita Mehta, attendant son reachable on 9811100022"}
+    steps:
+      - erase: {person: carer-3}
+        expect:
+          actions: {booking-3: delete, sum-3: redact}
+          kept: [sum-3]
+          reads: {sum-3: "[ERASED]"}
+
+  - id: hc-04-access-timing
+    title: Access requests are due in three days and list the lab and insurer
+    people:
+      - id: pat-4
+        consents: [care_delivery, insurance_claims]
+        records:
+          - {id: lab-4, store: lab_partner, kind: record, purpose: care_delivery,
+             text: "Lipid profile for UHID HSP-0011223, phone 9822200033"}
+          - {id: clm-4, store: insurer_tpa, kind: record, purpose: insurance_claims,
+             text: "Pre-authorisation for UHID HSP-0011223"}
+    steps:
+      - access: {person: pat-4}
+        expect:
+          due_days: 3
+          types: [UHID, PHONE_IN]
+          recipients: ["Diagnostic laboratory partner", "Your insurer or third-party administrator"]
+          not_recipients: ["ABDM health information exchange"]
+
+  - id: hc-05-verification-safety-net
+    title: Regex misses a name written without a cue in a log; verification catches it and the case needs review
+    # Production healthcare deployments need an NER, cloud or LLM detector for names and clinical free text.
+    people:
+      - id: pat-5
+        consents: [appointment_and_triage, care_delivery]
+        records:
+          - {id: triage-5, store: agent_chats, kind: record, purpose: appointment_and_triage,
+             text: "My name is Farah Khan, fever for three days"}
+          - {id: log-5, store: app_log, kind: log, purpose: care_delivery,
+             text: "Seen today: Farah Khan, fever, review in 48 hours"}
+    steps:
+      - erase: {person: pat-5}
+        expect:
+          status: completed_with_exceptions
+
+detection:
+  - text: "UHID HSP-0044512, ABHA 91-2345-6789-0123, ABHA address lakshmi.p@abdm"
+    types: [UHID, ABHA_NUMBER, ABHA_ADDRESS]
+    absent: [UPI_ID]
+  - text: "Ward 7 bed 12, shift change at 0800"
+    absent: [UHID, PHONE_IN]

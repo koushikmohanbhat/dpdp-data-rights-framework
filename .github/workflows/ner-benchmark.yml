@@ -1,0 +1,65 @@
+name: ner-benchmark
+# Builds the NER sidecar image (deploy/ner/Dockerfile) with AI4Bharat IndicNER baked in, starts it, and benchmarks
+# regex alone against regex + remote_ner on the built-in labelled set. Results go to the job summary.
+# IndicNER is gated on Hugging Face: accept its terms with a Hugging Face account, create a read token, and store it
+# as the secret HF_TOKEN in the GitHub environment "huggingface". Without it the job is skipped with a warning.
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "41 4 * * 1"          # Mondays 04:41 UTC
+  push:
+    branches: [main]
+    paths: ["deploy/ner/**", "src/dpdp_rights/pii/**", ".github/workflows/ner-benchmark.yml"]
+permissions: {contents: read}
+jobs:
+  ner:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: huggingface
+    steps:
+      - name: token present?
+        id: tok
+        env: { HF_TOKEN: "${{ secrets.HF_TOKEN }}" }       # only this step and the build see the token
+        run: |
+          if [ -z "$HF_TOKEN" ]; then
+            echo "::warning::HF_TOKEN is not set in the 'huggingface' environment; IndicNER is gated, so the benchmark was skipped"
+            echo "Skipped: set HF_TOKEN in the 'huggingface' environment (IndicNER is a gated model)." >> "$GITHUB_STEP_SUMMARY"
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
+        if: steps.tok.outputs.run == 'true'
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
+        if: steps.tok.outputs.run == 'true'
+        with: { python-version: "3.12" }
+      - name: build the sidecar image
+        if: steps.tok.outputs.run == 'true'
+        env: { HF_TOKEN: "${{ secrets.HF_TOKEN }}" }       # a BuildKit secret: not stored in any image layer
+        run: DOCKER_BUILDKIT=1 docker build --secret id=hf_token,env=HF_TOKEN -f deploy/ner/Dockerfile -t dpdp-ner:ci .
+      - name: start it (localhost only, as in a task or pod)
+        if: steps.tok.outputs.run == 'true'
+        run: |
+          docker run -d --name ner --network host -e NER_HOST=127.0.0.1 dpdp-ner:ci
+          for i in $(seq 1 60); do curl -fs http://127.0.0.1:8081/healthz && break; sleep 3; done
+          curl -fs http://127.0.0.1:8081/healthz
+      - name: smoke test
+        if: steps.tok.outputs.run == 'true'
+        run: |
+          curl -fs -X POST http://127.0.0.1:8081/v1/ner -H 'Content-Type: application/json' \
+            -d '{"texts": ["कल प्रिया शर्मा ने शिकायत दर्ज की", "Spoke to Rahul Verma from the Pune branch"]}' | tee /tmp/ner.json
+          python -c "import json; d=json.load(open('/tmp/ner.json')); assert len(d['entities']) == 2, d"
+      - run: pip install -e .
+        if: steps.tok.outputs.run == 'true'
+      - name: benchmark
+        if: steps.tok.outputs.run == 'true'
+        run: |
+          {
+            echo "## Regex only"; dpdp-rights -c config/dpdp.local.yaml pii-benchmark --detectors regex --format md || true
+            echo; echo "## Regex + IndicNER (remote_ner sidecar)"
+            dpdp-rights -c config/dpdp.local.yaml pii-benchmark --detectors regex,remote_ner --format md || true
+          } | tee -a "$GITHUB_STEP_SUMMARY"
+          dpdp-rights -c config/dpdp.local.yaml pii-benchmark --detectors regex,remote_ner --format json > /tmp/bench.json || true
+          python -c "import json; r=json.load(open('/tmp/bench.json')); print(json.dumps(r['combined']['by_type'].get('NAME'), indent=1)); assert r['combined']['by_type']['NAME']['tp'] > 0"
+      - if: always() && steps.tok.outputs.run == 'true'
+        run: docker logs ner 2>&1 | tail -50

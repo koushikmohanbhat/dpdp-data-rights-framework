@@ -1,0 +1,84 @@
+# AWS reference configuration: Bedrock models, AgentCore Memory/Observability,
+# CloudWatch Logs, Bedrock Knowledge Bases, KMS + DynamoDB vault, Aurora PostgreSQL lineage.
+tenant: ${TENANT:-acme-bank}
+
+provider:
+  type: bedrock
+  model: ${BEDROCK_MODEL_ID:-apac.anthropic.claude-sonnet-4-20250514-v1:0}
+  embedding_model: amazon.titan-embed-text-v2:0
+  region: ${AWS_REGION:-ap-south-1}
+  options:
+    guardrail_id: ${BEDROCK_GUARDRAIL_ID:-}   # optional: reuse your guardrail on every call
+
+pii:
+  # regex catches Aadhaar (Verhoeff-checked), PAN, UPI, +91 phones; Comprehend adds names/addresses.
+  detectors: [regex, aws_comprehend]
+  region: ${AWS_REGION:-ap-south-1}
+  min_score: 0.85
+
+vault:
+  key_wrapper: aws_kms
+  storage: dynamodb
+  kms_key_id: ${DPDP_KMS_KEY_ARN}
+  dynamodb_table_prefix: dpdp_vault
+  region: ${AWS_REGION:-ap-south-1}
+
+lineage:
+  url: ${DPDP_LINEAGE_URL}   # e.g. postgresql+psycopg://user:pass@aurora-endpoint:5432/dpdp
+
+purposes:
+  - {id: service_delivery, description: Deliver the service the customer signed up for}
+  - {id: analytics, description: Service-quality analytics}
+  - {id: model_evaluation, description: Assistant evaluation}
+  - id: kyc_regulatory
+    legal_basis: legitimate_use
+    legal_hold_basis: "Retention required by applicable law (validate with counsel)"
+
+connectors:
+  - name: agentcore_memory
+    type: aws_agentcore_memory
+    options:
+      memory_id: ${AGENTCORE_MEMORY_ID}
+      region: ${AWS_REGION:-ap-south-1}
+      namespaces: ["/users/{actorId}/facts", "/users/{actorId}/preferences", "/summaries/{actorId}"]
+
+  - name: cloudwatch
+    type: aws_cloudwatch_logs
+    options:
+      region: ${AWS_REGION:-ap-south-1}
+      lookback_days: 90
+      require_retention_days: 90
+      log_group_names:
+        - aws/spans                                          # AgentCore Observability (Transaction Search)
+        - /aws/bedrock-agentcore/runtimes/${AGENT_RUNTIME_ID}-DEFAULT
+        - ${BEDROCK_INVOCATION_LOG_GROUP:-/aws/bedrock/modelinvocations}
+        - /ecs/${APP_NAME:-ai-agent}
+
+  - name: kb
+    type: aws_bedrock_kb
+    options: {knowledge_base_id: "${KB_ID}", data_source_id: "${KB_DATA_SOURCE_ID}", mode: direct, region: "${AWS_REGION:-ap-south-1}"}
+
+  - name: transcripts
+    type: aws_s3_objects
+    options: {bucket: "${TRANSCRIPT_BUCKET}", prefix_template: "transcripts/{principal_id}/", purge_versions: true}
+
+  - name: eval_set
+    type: jsonl_dataset
+    options: {path: "s3://${EVAL_BUCKET}/golden/agent.jsonl", id_field: id}
+
+  - name: chat_history
+    type: aws_dynamodb
+    options: {table: chat_history, partition_key: principal_id, sort_key: ts, region: "${AWS_REGION:-ap-south-1}"}
+
+  - name: records
+    type: sql_table
+    options: {url: "${APP_DB_URL}", table: records, id_column: id, content_column: body, principal_column: principal_id}
+
+  - name: vectors
+    type: sql_table      # pgvector table on Aurora PostgreSQL
+    options: {url: "${APP_DB_URL}", table: chunks, id_column: id, content_column: chunk, embedding_column: embedding, kind: embedding}  # redacted rows are re-embedded
+
+policy:
+  default_action: delete
+  aggregate_k_threshold: 10
+  sla_days: 30

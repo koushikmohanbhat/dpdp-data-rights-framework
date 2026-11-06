@@ -1,0 +1,34 @@
+# Dependency audit policy, applied by scripts/audit_gate.py in CI (main) and before every release.
+# See docs/security.md#dependency-audit-gate for the process.
+#
+# fail_on: the agreed severity. Findings at this GitHub-advisory level or above block; lower ones are reported.
+#          A finding with no severity on record is treated as critical.
+fail_on: moderate
+
+# Supported production profiles. Each is resolved and audited on its own, as a deployment would install it, so
+# shared dependencies get the versions that deployment really gets. Every extra declared in pyproject.toml must
+# be in at least one profile or in excluded_extras; otherwise the gate blocks. Add a profile here when you
+# support a new deployment shape; detectors (presidio, indic-ner) add onto any cloud profile and are covered
+# by `full`.
+profiles:
+  aws: [aws, api, auth, postgres, otel, redis, documents]              # Bedrock, AgentCore, KMS, DynamoDB
+  gcp: [gcp, api, auth, postgres, otel, redis, documents]              # Vertex, Cloud KMS, Firestore, DLP
+  direct-api: [openai, anthropic, api, auth, postgres, otel, redis, documents]   # model APIs, any cloud
+  full: [all, documents, presidio, indic-ner, langchain, openai-agents]   # superset: every production extra
+
+# Extras that are not part of a production deployment, with the reason.
+excluded_extras:
+  testing: Connector conformance kit (pytest); used in plug-in authors' test suites, not installed in production
+  dev: Development and CI tooling (linters, test doubles, pip-audit); never installed in production
+
+# An exception may last at most this many days; then it must be fixed or re-approved.
+max_exception_days: 90
+
+# Accepted risks. Each entry needs every field; incomplete or expired entries block the gate. An exception covers
+# the vulnerability only in the named package (names compared PEP 503-normalised), never in another package.
+# - id: GHSA-xxxx-xxxx-xxxx         # or PYSEC-/CVE- id as pip-audit reports it
+#   package: example-package
+#   reason: Not reachable: we never call the affected function; upgrade blocked by X until 2027-01
+#   owner: security@your-org.example
+#   expires: 2027-01-31
+exceptions: []

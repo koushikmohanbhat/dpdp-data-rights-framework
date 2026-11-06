@@ -1,0 +1,11 @@
+# Gateway section to add to your DPDP config (docs/gateway.md). Start in observe mode during discovery.
+gateway:
+  enabled: true
+  mode: observe                 # observe -> report what flows; enforce -> consent check + tokenise
+  upstream_base_url: https://api.openai.com/v1     # used by the built-in endpoint, not by LiteLLM
+  upstream_api_key_env: OPENAI_API_KEY
+  default_purpose: null         # e.g. support, if one app serves one purpose
+  principal_binding: signed     # enforce mode: the app's backend sends X-DPDP-Assertion (see docs/gateway.md)
+  assertion_secret_env: DPDP_GATEWAY_ASSERTION_SECRET
+  missing_principal: block
+  reveal_responses: false

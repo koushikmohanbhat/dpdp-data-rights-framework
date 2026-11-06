@@ -1,0 +1,73 @@
+# Offline scenarios for the lending pack: `dpdp-rights packs test lending`.
+scenarios:
+  - id: lend-01-declined-applicant-erasure
+    title: A declined applicant asks to be erased; nothing is kept except KYC
+    people:
+      - id: appl-1
+        identifiers: {EMAIL: sameer.j@example.in}
+        consents: [loan_application, credit_assessment]
+        records:
+          - {id: chat-1, store: agent_chats, kind: record, purpose: loan_application,
+             text: "I am Sameer Joshi, PAN ABCPJ5678M, salary account a/c 50100123456789, mobile 9844455566"}
+          - {id: bureau-1, store: bureau_reports, kind: record, purpose: credit_assessment,
+             text: "Bureau pull for PAN ABCPJ5678M, score 612"}
+          - {id: kyc-1, store: kyc_vault, kind: record, purpose: kyc_aml,
+             text: "CKYC number 12345678901234 for PAN ABCPJ5678M"}
+          - {id: mem-1, store: agent_memory, kind: memory_record, purpose: loan_application,
+             text: "Sameer prefers Hindi; mobile 9844455566"}
+    steps:
+      - erase: {person: appl-1}
+        expect:
+          status: completed
+          actions: {chat-1: delete, bureau-1: delete, mem-1: delete, kyc-1: retain_legal_hold}
+          removed: [chat-1, bureau-1, mem-1]
+          kept: [kyc-1]
+
+  - id: lend-02-active-borrower
+    title: A borrower with an open loan withdraws marketing and asks for erasure; loan records stay
+    people:
+      - id: borr-2
+        consents: [loan_application, collections, marketing]
+        records:
+          - {id: loan-2, store: loan_system, kind: record, purpose: loan_account,
+             text: "Loan account LN-2026-00045 disbursed to mobile 9855566677, EMI from a/c 30201234567"}
+          - {id: offer-2, store: offers_audience, kind: record, purpose: marketing,
+             text: "Pre-approved top-up offer for 9855566677"}
+          - {id: coll-2, store: collections_agency, kind: record, purpose: collections,
+             text: "Reminder for loan account LN-2026-00045 to 9855566677"}
+    steps:
+      - withdraw: {person: borr-2, purpose: marketing}
+        expect:
+          actions: {offer-2: delete}
+          untouched: [loan-2, coll-2]
+      - access: {person: borr-2}
+        expect:
+          types: [PHONE_IN, LOAN_ACCOUNT, BANK_ACCOUNT]
+          recipients: ["Collection agency"]
+      - erase: {person: borr-2}
+        expect:
+          actions: {loan-2: retain_legal_hold, coll-2: delete}
+          kept: [loan-2]
+          removed: [coll-2]
+
+  - id: lend-03-correction
+    title: A borrower corrects their mobile number; the loan record shows the new number
+    people:
+      - id: borr-3
+        consents: [loan_application]
+        records:
+          - {id: loan-3, store: loan_system, kind: record, purpose: loan_account,
+             text: "Loan account LN-2026-00777, registered mobile 9866677788"}
+    steps:
+      - correct: {person: borr-3, element_type: PHONE_IN, new_value: "9877788899"}
+        expect:
+          reads: {loan-3: "9877788899"}
+
+detection:
+  - text: "Loan account LN-2026-00045, CKYC 12345678901234, a/c 50100123456789, IFSC HDFC0001234"
+    types: [LOAN_ACCOUNT, CKYC_NUMBER, BANK_ACCOUNT]
+    absent: [CARD_NUMBER]
+  - text: "Pay EMI via UPI sameer@okaxis, PAN ABCPJ5678M"
+    types: [UPI_ID, PAN]
+  - text: "Batch LN-ROLLUP-2026 completed"
+    absent: [LOAN_ACCOUNT]

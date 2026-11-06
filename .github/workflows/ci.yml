@@ -7,7 +7,7 @@ jobs:
     strategy:
       matrix: { python: ["3.10", "3.12", "3.13"] }
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v5
         with: { python-version: "${{ matrix.python }}" }
       - run: pip install -e ".[dev]"
@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: true      # advisory: surfaces CVEs in dependencies without blocking PRs
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
       - run: pip install -e . pip-audit && pip-audit

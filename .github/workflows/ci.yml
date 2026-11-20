@@ -8,7 +8,7 @@ jobs:
       matrix: { python: ["3.10", "3.12", "3.13"] }
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
-      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
         with: { python-version: "${{ matrix.python }}" }
       - run: pip install -e ".[dev]"
       - run: ruff check src tests
@@ -46,7 +46,7 @@ jobs:
           --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
-      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
         with: { python-version: "3.12" }
       - run: pip install -e ".[dev,postgres]"
       - run: pytest -q
@@ -59,7 +59,7 @@ jobs:
     continue-on-error: ${{ github.event_name == 'pull_request' }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262  # v4.4.0
-      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065  # v5.6.0
+      - uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0  # v7.1.0
         with: { python-version: "3.12" }
       - run: pip install -q pip-audit pyyaml
       - name: Dependency audit gate (production profile in .github/audit-policy.yml; see docs/security.md)
